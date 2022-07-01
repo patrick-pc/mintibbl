@@ -13,7 +13,7 @@ export default function Home() {
     if (!canvas) return
 
     socket.on('draw', (data) => {
-      console.log(data)
+      // console.log(data)
       canvas.current.loadSaveData(data, true)
     })
   }, [canvas])
@@ -32,6 +32,11 @@ export default function Home() {
     )
   }
 
+  const getDataURL = () => {
+    console.log(canvas.current.getDataURL())
+    alert('Data URL written to console')
+  }
+
   return (
     <div>
       <Head>
@@ -43,7 +48,7 @@ export default function Home() {
         <link rel='icon' href='/favicon.ico' />
       </Head>
 
-      <h1 className='flex items-center justify-center text-3xl font-bold h-screen w-full gap-8'>
+      <div className='flex items-center justify-center h-screen w-full gap-8'>
         <div
           className='cursor-pointer border shadow'
           onMouseUp={saveCanvas}
@@ -58,8 +63,17 @@ export default function Home() {
             canvasHeight={600}
           />
         </div>
-        <CirclePicker color={color} onChangeComplete={updateColor} />
-      </h1>
+
+        <div className='flex flex-col items-center justify-center gap-8'>
+          <CirclePicker color={color} onChangeComplete={updateColor} />
+          <button
+            className='py-2 px-4 rounded-md bg-black text-white'
+            onClick={getDataURL}
+          >
+            Get Data URL
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
