@@ -1,13 +1,26 @@
 import { useRef, useState, useEffect } from 'react'
-import { CirclePicker } from 'react-color'
 import CanvasDraw from 'react-canvas-draw'
+import { CirclePicker } from 'react-color'
 import io from 'socket.io-client'
 import axios from 'axios'
+import { useProvider, useSigner, useContract } from 'wagmi'
+import { CONTRACT_ADDRESS, ABI } from '../constants'
+import toast from 'react-hot-toast'
 
 const DrawingBoard = () => {
   const socket = io.connect('http://localhost:3001')
   const canvas = useRef(null)
   const [color, setColor] = useState('#666666')
+  const [isMining, setIsMining] = useState(false)
+
+  const provider = useProvider()
+  const signer = useSigner()
+
+  const mintibbleContract = useContract({
+    addressOrName: CONTRACT_ADDRESS,
+    contractInterface: ABI,
+    signerOrProvider: signer.data || provider,
+  })
 
   useEffect(() => {
     if (!canvas) return
@@ -36,17 +49,11 @@ const DrawingBoard = () => {
     )
   }
 
-  const getDataURL = () => {
-    console.log(canvas.current.getDataURL())
-    alert('Data URL written to console')
-    // pinToIPFS(canvas.current.getDataURL())
-  }
-
   const join = (data) => {
     socket.emit('join', 'walletAddress')
   }
 
-  const pinToIPFS = async (dataURL) => {
+  const pinToIPFS = async (name, description, dataURL) => {
     try {
       const data = JSON.stringify({
         pinataOptions: {
@@ -56,12 +63,11 @@ const DrawingBoard = () => {
           name: 'Mintibble',
         },
         pinataContent: {
-          name: 'Mintibble Drawing',
-          description: 'Test',
+          name: name,
+          description: description,
           image: dataURL,
         },
       })
-
       const config = {
         method: 'post',
         url: 'https://api.pinata.cloud/pinning/pinJSONToIPFS',
@@ -74,11 +80,38 @@ const DrawingBoard = () => {
       }
       const res = await axios(config)
 
-      const metadataURI = `https://ipfs.io/ipfs/${res.data.IpfsHash}`
-      console.log(metadataURI)
+      return `https://ipfs.io/ipfs/${res.data.IpfsHash}`
     } catch (error) {
       console.log(error)
     }
+  }
+
+  const mintDrawing = async () => {
+    try {
+      const metadataURI = await pinToIPFS(
+        'Mintibble Drawing',
+        'Test',
+        canvas.current.getDataURL()
+      )
+
+      const txResponse = await mintibbleContract.mintDrawing(metadataURI)
+      setIsMining(true)
+      await txResponse.wait()
+
+      toast('Minted drawing!', {
+        icon: '🎉',
+      })
+    } catch (error) {
+      console.error(error)
+
+      if (error.code == 4001) {
+        toast.error(error.message)
+      } else {
+        toast.error('Something went wrong.')
+      }
+    }
+
+    setIsMining(false)
   }
 
   return (
@@ -102,9 +135,10 @@ const DrawingBoard = () => {
         <CirclePicker color={color} onChangeComplete={updateColor} />
         <button
           className='py-2 px-4 rounded-md bg-black text-white'
-          onClick={getDataURL}
+          onClick={mintDrawing}
+          disabled={isMining}
         >
-          Get Data URL
+          Mint
         </button>
         <button
           className='py-2 px-4 rounded-md bg-black text-white'

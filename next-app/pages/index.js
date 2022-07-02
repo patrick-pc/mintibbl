@@ -13,7 +13,7 @@ const Home = () => {
         <link rel='icon' href='/favicon.ico' />
       </Head>
 
-      <div className='flex items-center justify-center h-screen w-full gap-8'>
+      <div className='flex justify-center gap-8'>
         <DrawingBoard />
       </div>
     </div>
