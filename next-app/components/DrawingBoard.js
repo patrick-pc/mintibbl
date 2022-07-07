@@ -109,9 +109,9 @@ const DrawingBoard = ({ socket }) => {
   }
 
   return (
-    <div className='flex flex-row gap-8'>
+    <div className='flex flex-col gap-8'>
       <div
-        className='cursor-pointer border shadow'
+        className='cursor-pointer border'
         onMouseUp={saveCanvas}
         onTouchEnd={saveCanvas}
       >

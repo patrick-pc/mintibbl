@@ -25,7 +25,6 @@ const colors = [
 ]
 
 const avatars = [
-  { color: colors[17], emoji: '🥳' },
   { color: colors[0], emoji: '🌶' },
   { color: colors[1], emoji: '🤑' },
   { color: colors[2], emoji: '🐙' },
@@ -58,6 +57,7 @@ const avatars = [
   { color: colors[17], emoji: '🙀' },
   { color: colors[4], emoji: '⛱' },
   { color: colors[21], emoji: '⛵️' },
+  { color: colors[17], emoji: '🥳' },
   { color: colors[8], emoji: '🤯' },
   { color: colors[22], emoji: '🤠' },
 ]
