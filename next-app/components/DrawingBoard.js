@@ -1,14 +1,15 @@
 import { useRef, useState, useEffect } from 'react'
 import CanvasDraw from 'react-canvas-draw'
 import { CirclePicker } from 'react-color'
-import io from 'socket.io-client'
+import { io } from 'socket.io-client'
 import axios from 'axios'
-import { useProvider, useSigner, useContract } from 'wagmi'
+import { useProvider, useSigner, useContract, useAccount } from 'wagmi'
 import { CONTRACT_ADDRESS, ABI } from '../constants'
 import toast from 'react-hot-toast'
 
-const DrawingBoard = () => {
-  const socket = io.connect('http://localhost:3001')
+// const socket = io.connect('http://localhost:3001')
+
+const DrawingBoard = ({ socket }) => {
   const canvas = useRef(null)
   const [color, setColor] = useState('#666666')
   const [isMining, setIsMining] = useState(false)
@@ -24,14 +25,11 @@ const DrawingBoard = () => {
 
   useEffect(() => {
     if (!canvas) return
+    console.log(canvas)
 
     socket.on('draw', (data) => {
       // console.log(data)
       canvas.current.loadSaveData(data, true)
-    })
-
-    socket.on('join', (data) => {
-      console.log(data)
     })
   }, [canvas])
 
@@ -47,10 +45,6 @@ const DrawingBoard = () => {
     setColor(
       `rgba(${value.rgb.r},${value.rgb.g},${value.rgb.b},${value.rgb.a})`
     )
-  }
-
-  const join = (data) => {
-    socket.emit('join', 'walletAddress')
   }
 
   const pinToIPFS = async (name, description, dataURL) => {
@@ -139,12 +133,6 @@ const DrawingBoard = () => {
           disabled={isMining}
         >
           Mint
-        </button>
-        <button
-          className='py-2 px-4 rounded-md bg-black text-white'
-          onClick={join}
-        >
-          Join
         </button>
       </div>
     </div>
