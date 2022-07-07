@@ -1,10 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { useAccount, useEnsName } from 'wagmi'
-import Avatar from '../components/Avatar'
-import toast from 'react-hot-toast'
 import io from 'socket.io-client'
-import immer from 'immer'
 import DrawingBoard from '../components/DrawingBoard'
+
+import Join from '../components/Join'
 
 const socket = io.connect('http://localhost:3001')
 
@@ -44,21 +43,9 @@ const Home = () => {
   }, [users, messages])
 
   return (
-    <div className='flex flex-col items-center justify-center gap-8'>
+    <div>
       {!connected ? (
-        <div>
-          <Avatar address={address} size={100} />
-
-          <div>{address ? address : ''}</div>
-
-          <input
-            type='text'
-            placeholder='Room id'
-            onChange={(e) => setRoom(e.target.value)}
-          />
-
-          <button onClick={joinRoom}>Join</button>
-        </div>
+        <Join address={address} setRoom={setRoom} joinRoom={joinRoom} />
       ) : (
         <div>
           <div>
