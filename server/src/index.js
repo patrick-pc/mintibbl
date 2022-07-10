@@ -11,6 +11,8 @@ const io = require('socket.io')(server, {
 app.use(cors())
 const { addUser, removeUser, getUser, getUsersInRoom } = require('./user')
 
+let drawer = ''
+let selectedWord = ''
 io.on('connection', (socket) => {
   socket.on('join_room', (room, address) => {
     socket.join(room)
@@ -21,23 +23,67 @@ io.on('connection', (socket) => {
       room: room,
     })
 
-    io.to(user.room).emit('roomData', {
-      room: user.room,
-      users: getUsersInRoom(user.room),
+    io.to(user.room).emit('new_user', getUsersInRoom(user.room))
+
+    io.to(user.room).emit('message', {
+      sender: user.address,
+      content: 'joined.',
+      color: 'green',
     })
-    // callback()
+
+    // Start game if users are >= 2
+    if (getUsersInRoom(user.room).length >= 2) {
+      drawer = getUsersInRoom(user.room)[1]
+
+      setTimeout(() => {
+        console.log('game started')
+        io.to(user.room).emit('game_started', {
+          drawer: drawer.address,
+          words: ['cryptopunks', 'bored ape yacht club', 'fidenza'],
+        })
+      }, 1000)
+    }
   })
 
-  socket.on('sendMessage', (message) => {
+  socket.on('word_selected', (word) => {
     const user = getUser(socket.id)
-    io.to(user.room).emit('message', { sender: user.address, content: message })
+    console.log(word)
+    selectedWord = word
 
-    // // If the user disconnects resend the room data to client
-    // io.to(user.room).emit('roomData', {
-    //   room: user.room,
-    //   users: getUsersInRoom(user.room),
-    // })
-    // callback()
+    io.to(user.room).emit('word', selectedWord)
+  })
+
+  socket.on('send_message', (message, callback) => {
+    console.log(message)
+
+    const user = getUser(socket.id)
+
+    console.log(user)
+    console.log(drawer)
+
+    // Correct guess
+    if (message === selectedWord) {
+      // Guess if not drawer
+      if (user.id !== drawer.id) {
+        console.log('guessed correctly')
+
+        // emit
+        io.to(user.room).emit('guessed_correctly', user.address)
+        io.to(user.room).emit('message', {
+          sender: user.address,
+          content: 'guessed the word!',
+          color: 'green',
+        })
+      }
+    } else {
+      io.to(user.room).emit('message', {
+        sender: user.address,
+        content: message,
+        color: 'black',
+      })
+    }
+
+    callback()
   })
 
   socket.on('draw', (data) => {
@@ -50,14 +96,12 @@ io.on('connection', (socket) => {
 
     if (user) {
       io.to(user.room).emit('message', {
-        sender: '',
-        content: `${user.address} had left the game`,
+        sender: user.address,
+        content: 'left.',
+        color: 'red',
       })
 
-      io.to(user.room).emit('roomData', {
-        room: user.room,
-        users: getUsersInRoom(user.room),
-      })
+      io.to(user.room).emit('new_user', getUsersInRoom(user.room))
     }
   })
 })
