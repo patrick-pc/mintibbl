@@ -6,7 +6,7 @@ const Header = () => {
     <header className='flex flex-row items-center justify-between gap-2 p-6 mb-6'>
       <div className='flex'>
         <NextLink href='/'>
-          <span className='font-bold text-2xl cursor-pointer'>Mintibble</span>
+          <span className='font-bold text-2xl cursor-pointer'>Mintibbl</span>
         </NextLink>
       </div>
       <div className='flex-none'>
