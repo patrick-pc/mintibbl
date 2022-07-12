@@ -10,11 +10,18 @@ const io = require('socket.io')(server, {
 })
 app.use(cors())
 const { addUser, removeUser, getUser, getUsersInRoom } = require('./user')
+const e = require('express')
 
+let gameStarted = false
+let round = 0
+let totalRounds = 3
 let drawer = ''
 let selectedWord = ''
+
+let publicRooms = ['1']
 io.on('connection', (socket) => {
-  socket.on('join_room', (room, address) => {
+  socket.on('create_room', (address) => {
+    const room = Math.random().toString(36).slice(-6)
     socket.join(room)
 
     const { user } = addUser({
@@ -24,25 +31,52 @@ io.on('connection', (socket) => {
     })
 
     io.to(user.room).emit('new_user', getUsersInRoom(user.room))
+  })
 
-    io.to(user.room).emit('message', {
-      sender: user.address,
-      content: 'joined.',
-      color: 'green',
-    })
+  socket.on('join_room', (room, address) => {
+    // If room is not defined, create public room
+    if (!room) {
+      room = publicRooms[publicRooms.length - 1]
 
-    // Start game if users are >= 2
-    if (getUsersInRoom(user.room).length >= 2) {
-      drawer = getUsersInRoom(user.room)[1]
-
-      setTimeout(() => {
-        console.log('game started')
-        io.to(user.room).emit('game_started', {
-          drawer: drawer.address,
-          words: ['cryptopunks', 'bored ape yacht club', 'fidenza'],
-        })
-      }, 1000)
+      // If full, create new public room
+      if (getUsersInRoom(room).length >= 2) {
+        room += 1
+        publicRooms.push(room)
+      }
     }
+
+    if (getUsersInRoom(room).length >= 2) return { error: 'Room is full!' }
+    socket.join(room)
+
+    const { user } = addUser({
+      id: socket.id,
+      address: address,
+      room: room,
+    })
+    // console.log(user)
+
+    io.to(user.room).emit('new_user', getUsersInRoom(user.room))
+
+    // io.to(user.room).emit('message', {
+    //   sender: user.address,
+    //   content: 'joined.',
+    //   color: 'green',
+    // })
+  })
+
+  socket.on('start_game', () => {
+    const user = getUser(socket.id)
+    console.log(user.room)
+
+    // Get last user as a drawer
+    drawer = getUsersInRoom(user.room)[getUsersInRoom(user.room).length - 1]
+
+    setTimeout(() => {
+      io.to(user.room).emit('game_started', {
+        drawer: drawer.address,
+        words: ['cryptopunks', 'bored ape yacht club', 'fidenza'],
+      })
+    }, 3000)
   })
 
   socket.on('word_selected', (word) => {

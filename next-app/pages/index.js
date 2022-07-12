@@ -1,3 +1,4 @@
+import { useRouter } from 'next/router'
 import { useState, useRef, useEffect } from 'react'
 import {
   useAccount,
@@ -16,20 +17,34 @@ import { CONTRACT_ADDRESS, ABI } from '../constants'
 import toast from 'react-hot-toast'
 
 import Join from '../components/Join'
+import Lobby from '../components/Lobby'
 
 const socket = io.connect('http://localhost:3001')
 
+// if room is not set, public play
+// else private play join private room
 const Home = () => {
+  const router = useRouter()
+  const { pid } = router.query
+
+  const [room, setRoom] = useState('')
+  useEffect(() => {
+    if (!pid) return
+
+    setRoom(pid)
+  }, [pid])
+
   const { address } = useAccount()
   const { data: ensName } = useEnsName({
     address: address,
   })
 
-  const [room, setRoom] = useState('')
+  const [isGameHost, setIsGameHost] = useState(false)
+  const [isGameOn, setIsGameOn] = useState(false)
+
   const [users, setUsers] = useState([])
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState([])
-  const [connected, setConnected] = useState(false)
 
   const [drawer, setDrawer] = useState('')
   const [words, setWords] = useState([])
@@ -58,11 +73,32 @@ const Home = () => {
     )
   }
 
-  const joinRoom = () => {
-    if (address !== '' && room !== '') {
-      socket.emit('join_room', room, address)
-      setConnected(true)
+  const [inLobby, setInLobby] = useState(false)
+
+  const createRoom = () => {
+    if (address !== '') {
+      console.log('create room')
+      if (room !== '') {
+        router.replace('/', undefined, { shallow: true })
+      }
+
+      socket.emit('create_room', address)
+      setInLobby(true)
     }
+  }
+
+  const joinRoom = () => {
+    if (address !== '') {
+      socket.emit('join_room', room, address)
+      // console.log(room)
+      // setIsGameOn(true)
+      setInLobby(true)
+    }
+  }
+
+  const startGame = () => {
+    console.log(room)
+    socket.emit('start_game', room)
   }
 
   const sendMessage = () => {
@@ -75,7 +111,9 @@ const Home = () => {
 
   useEffect(() => {
     socket.on('new_user', (users) => {
+      console.log(users)
       setUsers(users)
+      setIsGameHost(address === users[0].address)
     })
 
     socket.on('message', (message) => {
@@ -85,8 +123,10 @@ const Home = () => {
 
   useEffect(() => {
     socket.on('game_started', (game) => {
+      console.log(game)
       setDrawer(game.drawer)
       setWords(game.words)
+      setIsGameOn(true)
     })
 
     socket.on('word', (word) => {
@@ -163,8 +203,12 @@ const Home = () => {
 
   return (
     <div>
-      {!connected ? (
-        <Join address={address} setRoom={setRoom} joinRoom={joinRoom} />
+      {!isGameOn ? (
+        inLobby && users ? (
+          <Lobby users={users} startGame={startGame} isGameHost={isGameHost} />
+        ) : (
+          <Join address={address} createRoom={createRoom} joinRoom={joinRoom} />
+        )
       ) : (
         <div className='flex flex-col container overflow-hidden gap-4 mx-auto'>
           <div className='flex items-center justify-between border p-2'>
