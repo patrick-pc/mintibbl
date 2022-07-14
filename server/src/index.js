@@ -6,11 +6,8 @@ const server = http.createServer(app)
 const { instrument } = require('@socket.io/admin-ui')
 const io = require('socket.io')(server, {
   cors: {
-    origin: [
-      'http://localhost:3000',
-      'https://mintibbl.vercel.app/',
-      'https://admin.socket.io',
-    ],
+    origin: '*',
+    methods: ['GET', 'POST'],
   },
 })
 instrument(io, {
