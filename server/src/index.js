@@ -6,7 +6,11 @@ const server = http.createServer(app)
 const { instrument } = require('@socket.io/admin-ui')
 const io = require('socket.io')(server, {
   cors: {
-    origin: ['http://localhost:3000', 'https://admin.socket.io'],
+    origin: [
+      'http://localhost:3000',
+      'https://mintibbl.herokuapp.com/',
+      'https://admin.socket.io',
+    ],
   },
 })
 instrument(io, {
