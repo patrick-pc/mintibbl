@@ -8,7 +8,7 @@ const io = require('socket.io')(server, {
   cors: {
     origin: [
       'http://localhost:3000',
-      'https://mintibbl.herokuapp.com/',
+      'https://mintibbl.vercel.app/',
       'https://admin.socket.io',
     ],
   },
@@ -248,7 +248,6 @@ io.on('connection', (socket) => {
   })
 })
 
-io.listen(process.env.PORT || 3001)
-// server.listen(process.env.PORT || 3001, () =>
-//   console.log(`Server is running on port ${process.env.PORT || 3001}`)
-// )
+server.listen(process.env.PORT || 3001, () =>
+  console.log(`Server is running on port ${process.env.PORT || 3001}`)
+)
