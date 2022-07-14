@@ -19,7 +19,7 @@ import toast from 'react-hot-toast'
 import Join from '../components/Join'
 import Lobby from '../components/Lobby'
 
-const socket = io.connect('http://localhost:3001')
+const socket = io.connect(process.env.NEXT_PUBLIC_SERVER_URL)
 
 const Home = () => {
   const router = useRouter()
