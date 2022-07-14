@@ -46,7 +46,7 @@ function MyApp({ Component, pageProps }) {
       <WagmiConfig client={wagmiClient}>
         <RainbowKitProvider chains={chains}>
           <Head>
-            <title>Mintibble</title>
+            <title>Mintibbl</title>
             <meta
               name='description'
               content='Immortalized those hilarious drawings!'

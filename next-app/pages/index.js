@@ -21,8 +21,6 @@ import Lobby from '../components/Lobby'
 
 const socket = io.connect('http://localhost:3001')
 
-// if room is not set, public play
-// else private play join private room
 const Home = () => {
   const router = useRouter()
   const { pid } = router.query
@@ -39,8 +37,12 @@ const Home = () => {
     address: address,
   })
 
+  // useEffect(() => {
+  //   if (!address) socket.disconnect()
+  // }, [address])
+
   const [isGameHost, setIsGameHost] = useState(false)
-  const [isGameOn, setIsGameOn] = useState(false)
+  const [isGameStarted, setIsGameStarted] = useState(false)
 
   const [users, setUsers] = useState([])
   const [message, setMessage] = useState('')
@@ -49,7 +51,12 @@ const Home = () => {
   const [drawer, setDrawer] = useState('')
   const [words, setWords] = useState([])
   const [selectedWord, setSelectedWord] = useState('')
-  const [guessedUsers, setGuessedUsers] = useState('')
+  const [guessedUsers, setGuessedUsers] = useState([])
+  const [round, setRound] = useState(1)
+  const [totalRounds, setTotalRounds] = useState(3)
+  const [drawTime, setDrawTime] = useState(80)
+  const [previousDrawing, setPreviousDrawing] = useState('')
+  const [gameOver, setGameOver] = useState(false)
 
   const canvas = useRef(null)
   const [color, setColor] = useState('#000000')
@@ -76,29 +83,40 @@ const Home = () => {
   const [inLobby, setInLobby] = useState(false)
 
   const createRoom = () => {
-    if (address !== '') {
-      console.log('create room')
-      if (room !== '') {
-        router.replace('/', undefined, { shallow: true })
-      }
+    if (!address) {
+      toast('Connect wallet to continue.', {
+        icon: '🦊',
+      })
 
-      socket.emit('create_room', address)
-      setInLobby(true)
+      return
     }
+
+    console.log('create room')
+    if (room !== '') {
+      router.replace('/', undefined, { shallow: true })
+    }
+
+    socket.emit('create_room', address)
+    setInLobby(true)
   }
 
   const joinRoom = () => {
-    if (address !== '') {
-      socket.emit('join_room', room, address)
-      // console.log(room)
-      // setIsGameOn(true)
-      setInLobby(true)
+    if (!address) {
+      toast('Connect wallet to continue.', {
+        icon: '🦊',
+      })
+
+      return
     }
+
+    socket.emit('join_room', room, address)
+    setInLobby(true)
   }
 
   const startGame = () => {
-    console.log(room)
-    socket.emit('start_game', room)
+    console.log(totalRounds)
+    console.log(drawTime)
+    socket.emit('start_game', totalRounds, drawTime)
   }
 
   const sendMessage = () => {
@@ -110,33 +128,76 @@ const Home = () => {
   }
 
   useEffect(() => {
-    socket.on('new_user', (users) => {
-      console.log(users)
-      setUsers(users)
-      setIsGameHost(address === users[0].address)
-    })
+    // socket.on('room_data', (room) => {
+    //   console.log(room.users)
+    //   setUsers(room.users)
+    //   // setIsGameHost(address === room.users[0].address)
+    // })
 
     socket.on('message', (message) => {
       setMessages([...messages, message])
     })
-  }, [users, messages])
+  }, [messages])
 
   useEffect(() => {
+    socket.on('room_data', (room) => {
+      console.log(room)
+      setRoom(room.id)
+      setUsers(room.users)
+      setIsGameHost(address === room.users[0].address)
+
+      // if (room.isGameStarted) setIsGameStarted(true)
+    })
+
     socket.on('game_started', (game) => {
       console.log(game)
+      setRound(game.round)
+      setTotalRounds(game.totalRounds)
       setDrawer(game.drawer)
       setWords(game.words)
-      setIsGameOn(true)
+      setSelectedWord('')
+      setIsGameStarted(true)
+    })
+
+    socket.on('select_word', (game) => {
+      console.log('select words')
+      console.log(game)
+      setRound(game.round)
+      setTotalRounds(game.totalRounds)
+      setDrawer(game.drawer)
+      setWords(game.words)
+      setSelectedWord('')
+      // setIsGameStarted(true)
+
+      setPreviousDrawing(canvas.current.getDataURL())
     })
 
     socket.on('word', (word) => {
       setSelectedWord(word)
+      canvas.current.clear()
     })
 
-    socket.on('guessed_correctly', (address) => {
-      console.log(address)
-      setGuessedUsers(address)
+    socket.on('draw_time', (drawTime) => {
+      setDrawTime(drawTime)
+    })
+
+    socket.on('guessed_correctly', (guessedUsers) => {
+      setGuessedUsers(guessedUsers)
       console.log(guessedUsers)
+    })
+
+    socket.on('game_over', (room) => {
+      console.log('Game over!')
+      console.log(room)
+      setGameOver(true)
+      setRound(room.round)
+      setTotalRounds(room.totalRounds)
+      console.log(totalRounds)
+
+      setTimeout(() => {
+        startGame()
+        setGameOver(false)
+      }, 3000)
     })
   }, [socket])
 
@@ -203,16 +264,25 @@ const Home = () => {
 
   return (
     <div>
-      {!isGameOn ? (
+      {!isGameStarted ? (
         inLobby && users ? (
-          <Lobby users={users} startGame={startGame} isGameHost={isGameHost} />
+          <Lobby
+            room={room}
+            users={users}
+            startGame={startGame}
+            setTotalRounds={setTotalRounds}
+            setDrawTime={setDrawTime}
+            isGameHost={isGameHost}
+          />
         ) : (
           <Join address={address} createRoom={createRoom} joinRoom={joinRoom} />
         )
       ) : (
         <div className='flex flex-col container overflow-hidden gap-4 mx-auto'>
           <div className='flex items-center justify-between border p-2'>
-            <div className='text-lg font-medium'>Round 1 of 3</div>
+            <div className='text-lg font-medium'>
+              Round {round} of {totalRounds}
+            </div>
 
             <div>
               {selectedWord && (
@@ -230,7 +300,8 @@ const Home = () => {
               )}
             </div>
 
-            <div>
+            <div className='flex items-center justify-center gap-2'>
+              <span className='text-lg font-medium'>{drawTime}</span>
               <svg
                 xmlns='http://www.w3.org/2000/svg'
                 className='h-6 w-6'
@@ -263,7 +334,9 @@ const Home = () => {
                         isDrawer={user.address === drawer}
                       />
                       <div
-                        className={user.address === address && 'text-blue-500'}
+                        className={
+                          user.address === address ? 'text-blue-500' : ''
+                        }
                       >
                         {shortenAddress(user.address)}
                       </div>
@@ -274,8 +347,7 @@ const Home = () => {
 
             <div
               className={`relative ${
-                drawer !== address ||
-                (guessedUsers === address && 'pointer-events-none')
+                drawer !== address && 'pointer-events-none'
               }`}
             >
               <div
@@ -288,10 +360,13 @@ const Home = () => {
                   !selectedWord ? 'block' : 'hidden'
                 }`}
               >
-                {drawer === address &&
-                  words.map((word) => {
+                {gameOver ? (
+                  <div>Game over! Starting new game...</div>
+                ) : drawer === address ? (
+                  words.map((word, index) => {
                     return (
                       <button
+                        key={index}
                         className='btn btn-outline btn-xs'
                         onClick={() => {
                           socket.emit('word_selected', word)
@@ -301,61 +376,69 @@ const Home = () => {
                         {word}
                       </button>
                     )
-                  })}
-              </div>
-
-              <div
-                className={`absolute h-full w-full top-0 left-0 bg-black opacity-10 z-10 ${
-                  guessedUsers === address ? 'block' : 'hidden'
-                }`}
-              ></div>
-              <div
-                className={`absolute flex items-center justify-center h-full w-full gap-4 z-20 ${
-                  guessedUsers === address ? 'block' : 'hidden'
-                }`}
-              >
-                <button
-                  className='btn bg-amber-500 border border-amber-500 px-16'
-                  onClick={mintDrawing}
-                  disabled={isMining}
-                >
-                  {isMining ? 'Minting...' : 'Mint'}
-                </button>
+                  })
+                ) : (
+                  <div>{shortenAddress(drawer)} is now choosing a word.</div>
+                )}
               </div>
 
               <DrawingBoard socket={socket} canvas={canvas} color={color} />
             </div>
 
-            <div className='flex flex-col justify-between w-full h-[600px] border gap-4 p-2'>
-              <div className='flex flex-col overflow-y-auto'>
-                {messages &&
-                  messages.map((message, i) => {
-                    return (
-                      <div
-                        className='flex gap-2 p-2 even:bg-gray-50 odd:bg-gray-100'
-                        key={i}
-                      >
-                        <div className='text-sm'>
-                          <span className='font-medium mr-2'>
-                            {message.sender && shortenAddress(message.sender)}
-                          </span>
-                          <span>{message.content}</span>
+            <div className='flex flex-col w-full h-[600px] border gap-4 p-2'>
+              {guessedUsers.includes(address) && (
+                <div className='flex flex-col items-center h-[200px] gap-2'>
+                  <img
+                    className='border-2 border-black h-32 w-32'
+                    src={previousDrawing}
+                    alt='Drawing'
+                  />
+
+                  <button
+                    className='btn btn-block bg-amber-500 border border-amber-500 px-16'
+                    onClick={mintDrawing}
+                    disabled={isMining}
+                  >
+                    {isMining ? 'Minting...' : 'Mint'}
+                  </button>
+                </div>
+              )}
+
+              <div
+                className={`flex flex-col justify-between ${
+                  guessedUsers.includes(address) ? 'h-[380px]' : 'h-full'
+                }`}
+              >
+                <div className='flex flex-col overflow-y-auto'>
+                  {messages &&
+                    messages.map((message, i) => {
+                      return (
+                        <div
+                          className='flex gap-2 p-2 even:bg-gray-50 odd:bg-gray-100'
+                          key={i}
+                        >
+                          <div className='text-sm'>
+                            <span className='font-medium mr-2'>
+                              {message.sender && shortenAddress(message.sender)}
+                            </span>
+                            <span>{message.content}</span>
+                          </div>
                         </div>
-                      </div>
-                    )
-                  })}
-              </div>
-              <div>
-                <input
-                  className='input input-bordered w-full'
-                  type='text'
-                  placeholder='Type your guess here...'
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyPress={(event) => {
-                    event.key === 'Enter' && sendMessage()
-                  }}
-                />
+                      )
+                    })}
+                </div>
+                <div>
+                  <input
+                    className='input input-bordered w-full'
+                    type='text'
+                    placeholder='Type your guess here...'
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyPress={(event) => {
+                      event.key === 'Enter' && sendMessage()
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>

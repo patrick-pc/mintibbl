@@ -4,16 +4,13 @@ import CanvasDraw from 'react-canvas-draw'
 const DrawingBoard = ({ socket, canvas, color }) => {
   useEffect(() => {
     if (!canvas) return
-    // console.log(canvas)
 
     socket.on('draw', (data) => {
-      console.log(data)
       canvas.current.loadSaveData(data, true)
     })
   }, [canvas])
 
   const saveCanvas = () => {
-    // console.log(canvas)
     socket.emit('draw', canvas.current.getSaveData())
   }
 

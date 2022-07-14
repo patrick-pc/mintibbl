@@ -3,114 +3,214 @@ const express = require('express')
 const cors = require('cors')
 const app = express()
 const server = http.createServer(app)
+const { instrument } = require('@socket.io/admin-ui')
 const io = require('socket.io')(server, {
   cors: {
-    origin: '*',
+    origin: ['http://localhost:3000', 'https://admin.socket.io'],
   },
 })
+instrument(io, {
+  auth: false,
+})
 app.use(cors())
-const { addUser, removeUser, getUser, getUsersInRoom } = require('./user')
-const e = require('express')
 
-let gameStarted = false
-let round = 0
-let totalRounds = 3
-let drawer = ''
-let selectedWord = ''
+const {
+  createRoom,
+  joinRoom,
+  getRoom,
+  getRoomFromSocketId,
+  getUsers,
+  getUserFromSocketId,
+  leaveRoom,
+  deleteRoom,
+  getRandomWords,
+} = require('./game')
+const publicRooms = [1]
 
-let publicRooms = ['1']
 io.on('connection', (socket) => {
   socket.on('create_room', (address) => {
-    const room = Math.random().toString(36).slice(-6)
-    socket.join(room)
-
-    const { user } = addUser({
+    const randomRoomId = Math.random().toString(36).slice(-6)
+    const user = {
       id: socket.id,
       address: address,
-      room: room,
-    })
-
-    io.to(user.room).emit('new_user', getUsersInRoom(user.room))
-  })
-
-  socket.on('join_room', (room, address) => {
-    // If room is not defined, create public room
-    if (!room) {
-      room = publicRooms[publicRooms.length - 1]
-
-      // If full, create new public room
-      if (getUsersInRoom(room).length >= 2) {
-        room += 1
-        publicRooms.push(room)
-      }
+      points: 0,
     }
 
-    if (getUsersInRoom(room).length >= 2) return { error: 'Room is full!' }
-    socket.join(room)
-
-    const { user } = addUser({
-      id: socket.id,
-      address: address,
-      room: room,
-    })
-    // console.log(user)
-
-    io.to(user.room).emit('new_user', getUsersInRoom(user.room))
-
-    // io.to(user.room).emit('message', {
-    //   sender: user.address,
-    //   content: 'joined.',
-    //   color: 'green',
-    // })
+    createRoom(randomRoomId, user)
+    socket.join(randomRoomId)
+    io.to(randomRoomId).emit('room_data', getRoom(randomRoomId))
   })
 
-  socket.on('start_game', () => {
-    const user = getUser(socket.id)
-    console.log(user.room)
+  socket.on('join_room', (roomId, address) => {
+    const user = {
+      id: socket.id,
+      address: address,
+      points: 0,
+    }
 
-    // Get last user as a drawer
-    drawer = getUsersInRoom(user.room)[getUsersInRoom(user.room).length - 1]
+    // If room is not defined, create public room
+    if (!roomId) roomId = publicRooms[publicRooms.length - 1]
+    console.log(roomId)
 
-    setTimeout(() => {
-      io.to(user.room).emit('game_started', {
-        drawer: drawer.address,
-        words: ['cryptopunks', 'bored ape yacht club', 'fidenza'],
-      })
-    }, 3000)
+    // Check if room exists
+    if (getRoom(roomId)) {
+      // If full or game already started, create new public room
+      if (getUsers(roomId).length >= 3 || getRoom(roomId).isGameStarted) {
+        // change this
+        roomId += 1
+        publicRooms.push(roomId)
+        createRoom(roomId, user)
+      } else {
+        joinRoom(roomId, user)
+      }
+    } else {
+      createRoom(roomId, user)
+    }
+
+    socket.join(roomId)
+    io.to(roomId).emit('room_data', getRoom(roomId))
+  })
+
+  socket.on('start_game', (totalRounds, drawTime) => {
+    const room = getRoomFromSocketId(socket.id)
+
+    room.isGameStarted = true
+    room.round = 1
+    room.totalRounds = totalRounds
+    room.drawTime = drawTime
+    room.drawerAddress = getUsers(room.id)[room.drawerIndex].address
+
+    io.to(room.id).emit('game_started', {
+      round: room.round,
+      totalRounds: room.totalRounds,
+      drawer: room.drawerAddress,
+      words: getRandomWords(),
+    })
   })
 
   socket.on('word_selected', (word) => {
-    const user = getUser(socket.id)
-    console.log(word)
-    selectedWord = word
+    const room = getRoomFromSocketId(socket.id)
+    room.selectedWord = word
 
-    io.to(user.room).emit('word', selectedWord)
+    io.to(room.id).emit('word', room.selectedWord)
+
+    // Run timer
+    // const interval = setInterval(() => {
+    //   room.drawTime -= 1
+    //   io.to(room.id).emit('draw_time', room.drawTime)
+
+    //   if (room.drawTime === 0) {
+    //     // If all users have drawn, start next round
+    //     if (room.drawnUsers.length === getUsers(room.id).length) {
+    //       room.round++
+    //       room.drawerIndex = 0
+    //       room.drawerAddress = getUsers(room.id)[room.drawerIndex].address
+    //       room.drawnUsers = []
+    //       room.guessedUsers = []
+    //       // room.words = []
+    //       // room.selectedWord =''
+
+    //       io.to(room.id).emit('select_word', {
+    //         round: room.round,
+    //         drawer: room.drawerAddress,
+    //         words: getRandomWords(),
+    //       })
+    //     }
+
+    //     // Check if game is over
+    //     if (room.round === room.totalRounds) {
+    //       console.log('Game over!')
+    //       io.to(room.id).emit('game_over', getRoom(room.id))
+    //     }
+
+    //     room.drawerIndex++
+    //     room.drawerAddress = getUsers(room.id)[room.drawerIndex].address
+
+    //     io.to(room.id).emit('select_word', {
+    //       round: room.round,
+    //       drawer: room.drawerAddress,
+    //       words: getRandomWords(),
+    //     })
+
+    //     // Reset guessed users
+    //     room.guessedUsers = []
+    //     room.drawTime = 80 // TODO: make this dynamic
+
+    //     clearInterval(interval)
+    //   }
+    // }, 1000)
   })
 
   socket.on('send_message', (message, callback) => {
     console.log(message)
 
-    const user = getUser(socket.id)
-
-    console.log(user)
-    console.log(drawer)
+    const user = getUserFromSocketId(socket.id)
+    const room = getRoomFromSocketId(socket.id)
 
     // Correct guess
-    if (message === selectedWord) {
-      // Guess if not drawer
-      if (user.id !== drawer.id) {
-        console.log('guessed correctly')
+    if (message === room.selectedWord) {
+      // If not drawer and haven't guessed yet, emit message
+      if (user.address !== room.drawerAddress) {
+        console.log(`${user.address} guessed the word!`)
+        user.points += 100
 
-        // emit
-        io.to(user.room).emit('guessed_correctly', user.address)
-        io.to(user.room).emit('message', {
+        room.drawnUsers.push(room.drawerAddress) // Prev drawer
+        room.guessedUsers.push(user.address)
+
+        io.to(room.id).emit('guessed_correctly', room.guessedUsers)
+        io.to(room.id).emit('message', {
           sender: user.address,
           content: 'guessed the word!',
           color: 'green',
         })
+
+        // If all users have drawn, start next round
+        if (room.drawnUsers.length === getUsers(room.id).length) {
+          // Check if the game is over
+          if (room.round == room.totalRounds) {
+            console.log('Game over!')
+            io.to(room.id).emit('game_over', getRoom(room.id))
+
+            callback()
+          }
+
+          room.round++
+          room.drawerIndex = 0
+          room.drawerAddress = getUsers(room.id)[room.drawerIndex].address
+          room.drawnUsers = []
+          room.guessedUsers = []
+          // room.words = []
+          // room.selectedWord =''
+
+          io.to(room.id).emit('select_word', {
+            round: room.round,
+            totalRounds: room.totalRounds,
+            drawer: room.drawerAddress,
+            words: getRandomWords(),
+          })
+        }
+      }
+
+      // If all users have guessed or time is up, choose next drawer
+      if (
+        room.guessedUsers.length === getUsers(room.id).length - 1 ||
+        room.drawTime === 0
+      ) {
+        room.drawerIndex++
+        room.drawerAddress = getUsers(room.id)[room.drawerIndex].address
+
+        io.to(room.id).emit('select_word', {
+          round: room.round,
+          totalRounds: room.totalRounds,
+          drawer: room.drawerAddress,
+          words: getRandomWords(),
+        })
+
+        // Reset guessed users
+        room.guessedUsers = []
       }
     } else {
-      io.to(user.room).emit('message', {
+      io.to(room.id).emit('message', {
         sender: user.address,
         content: message,
         color: 'black',
@@ -121,25 +221,29 @@ io.on('connection', (socket) => {
   })
 
   socket.on('draw', (data) => {
-    const user = getUser(socket.id)
-    io.to(user.room).emit('draw', data)
+    const room = getRoomFromSocketId(socket.id)
+    io.to(room.id).emit('draw', data)
   })
 
   socket.on('disconnect', () => {
-    const user = removeUser(socket.id)
+    console.log(`${socket.id} disconnected.`)
+    const { roomId, user } = leaveRoom(socket.id)
 
-    if (user) {
-      io.to(user.room).emit('message', {
+    if (roomId && user) {
+      io.to(roomId).emit('message', {
         sender: user.address,
         content: 'left.',
         color: 'red',
       })
+      io.to(roomId).emit('room_data', getRoom(roomId))
 
-      io.to(user.room).emit('new_user', getUsersInRoom(user.room))
+      // TODO: Delete public room if empty
+      // Delete room if empty
+      if (getUsers(roomId).length === 0) deleteRoom(roomId)
     }
   })
 })
 
 server.listen(process.env.PORT || 3001, () =>
-  console.log(`Server has started.`)
+  console.log(`Server is running on port ${process.env.PORT || 3001}`)
 )
