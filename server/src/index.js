@@ -89,55 +89,23 @@ io.on('connection', (socket) => {
     })
   })
 
-  socket.on('word_selected', (word) => {
+  socket.on('word_is', (word) => {
     const room = getRoomFromSocketId(socket.id)
     room.selectedWord = word
 
-    io.to(room.id).emit('word', room.selectedWord)
+    io.to(room.id).emit('word_selected', room.selectedWord)
 
     // Run timer
-    // const interval = setInterval(() => {
-    //   room.drawTime -= 1
-    //   io.to(room.id).emit('draw_time', room.drawTime)
+    // room.timer = 10
+    // room.interval = setInterval(() => {
+    //   room.timer -= 1
+    //   io.to(room.id).emit('timer', room.timer)
 
-    //   if (room.drawTime === 0) {
-    //     // If all users have drawn, start next round
-    //     if (room.drawnUsers.length === getUsers(room.id).length) {
-    //       room.round++
-    //       room.drawerIndex = 0
-    //       room.drawerAddress = getUsers(room.id)[room.drawerIndex].address
-    //       room.drawnUsers = []
-    //       room.guessedUsers = []
-    //       // room.words = []
-    //       // room.selectedWord =''
+    //   if (room.timer == 0) {
+    //     io.to(room.id).emit('draw_time_over', room)
 
-    //       io.to(room.id).emit('select_word', {
-    //         round: room.round,
-    //         drawer: room.drawerAddress,
-    //         words: getRandomWords(),
-    //       })
-    //     }
-
-    //     // Check if game is over
-    //     if (room.round === room.totalRounds) {
-    //       console.log('Game over!')
-    //       io.to(room.id).emit('game_over', getRoom(room.id))
-    //     }
-
-    //     room.drawerIndex++
-    //     room.drawerAddress = getUsers(room.id)[room.drawerIndex].address
-
-    //     io.to(room.id).emit('select_word', {
-    //       round: room.round,
-    //       drawer: room.drawerAddress,
-    //       words: getRandomWords(),
-    //     })
-
-    //     // Reset guessed users
-    //     room.guessedUsers = []
-    //     room.drawTime = 80 // TODO: make this dynamic
-
-    //     clearInterval(interval)
+    //     room.timer = 10
+    //     clearInterval(room.interval)
     //   }
     // }, 1000)
   })
@@ -167,6 +135,7 @@ io.on('connection', (socket) => {
 
         // If all users have drawn, start next round
         if (room.drawnUsers.length === getUsers(room.id).length) {
+          console.log('next_round')
           // Check if the game is over
           if (room.round == room.totalRounds) {
             console.log('Game over!')
@@ -183,32 +152,38 @@ io.on('connection', (socket) => {
           // room.words = []
           // room.selectedWord =''
 
-          io.to(room.id).emit('select_word', {
-            round: room.round,
-            totalRounds: room.totalRounds,
-            drawer: room.drawerAddress,
-            words: getRandomWords(),
-          })
+          // io.to(room.id).emit('select_word', {
+          //   round: room.round,
+          //   totalRounds: room.totalRounds,
+          //   drawer: room.drawerAddress,
+          //   words: getRandomWords(),
+          // })
+
+          io.to(room.id).emit('end_turn', room.selectedWord)
         }
-      }
 
-      // If all users have guessed or time is up, choose next drawer
-      if (
-        room.guessedUsers.length === getUsers(room.id).length - 1 ||
-        room.drawTime === 0
-      ) {
-        room.drawerIndex++
-        room.drawerAddress = getUsers(room.id)[room.drawerIndex].address
+        // If all users have guessed, choose next drawer
+        if (room.guessedUsers.length === getUsers(room.id).length - 1) {
+          room.drawerIndex++
+          room.drawerAddress = getUsers(room.id)[room.drawerIndex].address
 
-        io.to(room.id).emit('select_word', {
-          round: room.round,
-          totalRounds: room.totalRounds,
-          drawer: room.drawerAddress,
-          words: getRandomWords(),
-        })
+          // io.to(room.id).emit('select_word', {
+          //   round: room.round,
+          //   totalRounds: room.totalRounds,
+          //   drawer: room.drawerAddress,
+          //   words: getRandomWords(),
+          // })
+          // console.log('end turn')
+          io.to(room.id).emit('end_turn', room.selectedWord)
 
-        // Reset guessed users
-        room.guessedUsers = []
+          // Reset guessed users
+          // room.guessedUsers = []
+
+          // room.timer = room.drawTime
+          // clearInterval(room.interval) // delete this line
+          // console.log('clear interval')
+          // console.log(room.interval)
+        }
       }
     } else {
       io.to(room.id).emit('message', {
@@ -219,6 +194,25 @@ io.on('connection', (socket) => {
     }
 
     callback()
+  })
+
+  socket.on('change_turn', () => {
+    console.log('change_turn')
+    const room = getRoomFromSocketId(socket.id)
+
+    io.to(room.id).emit('select_word', {
+      round: room.round,
+      totalRounds: room.totalRounds,
+      drawer: room.drawerAddress,
+      words: getRandomWords(),
+    })
+
+    room.guessedUsers = []
+
+    room.timer = room.drawTime
+    clearInterval(room.interval) // delete this line
+    console.log('clear interval')
+    console.log(room.interval)
   })
 
   socket.on('draw', (data) => {

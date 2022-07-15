@@ -18,6 +18,7 @@ import toast from 'react-hot-toast'
 
 import Join from '../components/Join'
 import Lobby from '../components/Lobby'
+import { render } from 'react-dom'
 
 const socket = io.connect(process.env.NEXT_PUBLIC_SERVER_URL)
 
@@ -57,6 +58,11 @@ const Home = () => {
   const [drawTime, setDrawTime] = useState(80)
   const [previousDrawing, setPreviousDrawing] = useState('')
   const [gameOver, setGameOver] = useState(false)
+  const [drawTimeOver, setDrawTimeOver] = useState(false)
+
+  const [overlay, setOverlay] = useState(false)
+  const [wordSelection, setWordSelection] = useState(false)
+  const [showScoreboard, setShowScoreboard] = useState(false)
 
   const canvas = useRef(null)
   const [color, setColor] = useState('#000000')
@@ -150,6 +156,9 @@ const Home = () => {
     })
 
     socket.on('game_started', (game) => {
+      setOverlay(true)
+      setWordSelection(true)
+
       console.log(game)
       setRound(game.round)
       setTotalRounds(game.totalRounds)
@@ -160,6 +169,9 @@ const Home = () => {
     })
 
     socket.on('select_word', (game) => {
+      setOverlay(true)
+      setWordSelection(true)
+
       console.log('select words')
       console.log(game)
       setRound(game.round)
@@ -167,23 +179,45 @@ const Home = () => {
       setDrawer(game.drawer)
       setWords(game.words)
       setSelectedWord('')
-      // setIsGameStarted(true)
 
-      setPreviousDrawing(canvas.current.getDataURL())
+      // setIsGameStarted(true)
+      // setPreviousDrawing(canvas.current.getDataURL())
     })
 
-    socket.on('word', (word) => {
+    socket.on('word_selected', (word) => {
+      setOverlay(false)
+      setWordSelection(false)
+
       setSelectedWord(word)
       canvas.current.clear()
-    })
-
-    socket.on('draw_time', (drawTime) => {
-      setDrawTime(drawTime)
     })
 
     socket.on('guessed_correctly', (guessedUsers) => {
       setGuessedUsers(guessedUsers)
       console.log(guessedUsers)
+    })
+
+    socket.on('timer', (timer) => {
+      setDrawTime(timer)
+    })
+
+    socket.on('draw_time_over', (room) => {
+      console.log(room)
+      setDrawTimeOver(true)
+    })
+
+    socket.on('end_turn', (selectedWord) => {
+      setOverlay(true)
+      setPreviousDrawing(canvas.current.getDataURL())
+      console.log('end_turn')
+      setShowScoreboard(true)
+      console.log(showScoreboard)
+
+      setTimeout(() => {
+        setShowScoreboard(false)
+        console.log('change_turn')
+        socket.emit('change_turn')
+      }, 3000)
     })
 
     socket.on('game_over', (room) => {
@@ -260,6 +294,31 @@ const Home = () => {
     }
 
     setIsMining(false)
+  }
+
+  const renderOverlay = () => {
+    if (gameOver) {
+      return <div>Game over! Starting new game...</div>
+    } else if (showScoreboard) {
+      return <div>The word was {selectedWord}.</div>
+    } else if (drawer === address) {
+      return words.map((word, index) => {
+        return (
+          <button
+            key={index}
+            className='btn btn-outline btn-xs'
+            onClick={() => {
+              socket.emit('word_is', word)
+              setWords([])
+            }}
+          >
+            {word}
+          </button>
+        )
+      })
+    } else {
+      return <div>{shortenAddress(drawer)} is now choosing a word.</div>
+    }
   }
 
   return (
@@ -352,34 +411,35 @@ const Home = () => {
             >
               <div
                 className={`absolute h-full w-full top-0 left-0 bg-black opacity-10 z-10 ${
-                  !selectedWord ? 'block' : 'hidden'
+                  overlay ? 'block' : 'hidden'
                 }`}
               ></div>
               <div
                 className={`absolute flex items-center justify-center h-full w-full gap-4 z-20 ${
-                  !selectedWord ? 'block' : 'hidden'
+                  overlay ? 'block' : 'hidden'
                 }`}
               >
-                {gameOver ? (
-                  <div>Game over! Starting new game...</div>
-                ) : drawer === address ? (
-                  words.map((word, index) => {
-                    return (
-                      <button
-                        key={index}
-                        className='btn btn-outline btn-xs'
-                        onClick={() => {
-                          socket.emit('word_selected', word)
-                          setWords([])
-                        }}
-                      >
-                        {word}
-                      </button>
-                    )
-                  })
-                ) : (
-                  <div>{shortenAddress(drawer)} is now choosing a word.</div>
-                )}
+                {wordSelection &&
+                  (drawer === address ? (
+                    words.map((word, index) => {
+                      return (
+                        <button
+                          key={index}
+                          className='btn btn-outline btn-xs'
+                          onClick={() => {
+                            socket.emit('word_is', word)
+                            setWords([])
+                          }}
+                        >
+                          {word}
+                        </button>
+                      )
+                    })
+                  ) : (
+                    <div>{shortenAddress(drawer)} is choosing a word.</div>
+                  ))}
+                {showScoreboard && <div>Word was {selectedWord}.</div>}
+                {gameOver && <div>Game over! Starting new game...</div>}
               </div>
 
               <DrawingBoard socket={socket} canvas={canvas} color={color} />
@@ -388,6 +448,7 @@ const Home = () => {
             <div className='flex flex-col w-full h-[600px] border gap-4 p-2'>
               {guessedUsers.includes(address) && (
                 <div className='flex flex-col items-center h-[200px] gap-2'>
+                  {showScoreboard && <div>test</div>}
                   <img
                     className='border-2 border-black h-32 w-32'
                     src={previousDrawing}
