@@ -42,6 +42,7 @@ const Home = () => {
   //   if (!address) socket.disconnect()
   // }, [address])
 
+  const [name, setName] = useState('')
   const [isGameHost, setIsGameHost] = useState(false)
   const [isGameStarted, setIsGameStarted] = useState(false)
 
@@ -102,7 +103,7 @@ const Home = () => {
       router.replace('/', undefined, { shallow: true })
     }
 
-    socket.emit('create_room', address)
+    socket.emit('create_room', address, name)
     setInLobby(true)
   }
 
@@ -115,7 +116,7 @@ const Home = () => {
       return
     }
 
-    socket.emit('join_room', room, address)
+    socket.emit('join_room', room, address, name)
     setInLobby(true)
   }
 
@@ -151,21 +152,6 @@ const Home = () => {
       setRoom(room.id)
       setUsers(room.users)
       setIsGameHost(address === room.users[0].address)
-
-      // if (room.isGameStarted) setIsGameStarted(true)
-    })
-
-    socket.on('game_started', (game) => {
-      setOverlay(true)
-      setWordSelection(true)
-
-      console.log(game)
-      setRound(game.round)
-      setTotalRounds(game.totalRounds)
-      setDrawer(game.drawer)
-      setWords(game.words)
-      setSelectedWord('')
-      setIsGameStarted(true)
     })
 
     socket.on('select_word', (game) => {
@@ -180,14 +166,15 @@ const Home = () => {
       setWords(game.words)
       setSelectedWord('')
 
-      // setIsGameStarted(true)
-      // setPreviousDrawing(canvas.current.getDataURL())
+      setIsGameStarted(true)
     })
 
     socket.on('word_selected', (word) => {
       setOverlay(false)
       setWordSelection(false)
 
+      // reset
+      setGuessedUsers([])
       setSelectedWord(word)
       canvas.current.clear()
     })
@@ -201,29 +188,29 @@ const Home = () => {
       setDrawTime(timer)
     })
 
-    socket.on('draw_time_over', (room) => {
-      console.log(room)
-      setDrawTimeOver(true)
-    })
-
-    socket.on('end_turn', (selectedWord) => {
+    socket.on('end_turn', (users) => {
       setOverlay(true)
       setPreviousDrawing(canvas.current.getDataURL())
       console.log('end_turn')
+      console.log(users)
       setShowScoreboard(true)
+      setUsers(users)
       console.log(showScoreboard)
 
       setTimeout(() => {
         setShowScoreboard(false)
-        console.log('change_turn')
-        socket.emit('change_turn')
+        console.log('start_turn')
+        socket.emit('start_turn')
       }, 3000)
     })
 
     socket.on('game_over', (room) => {
-      console.log('Game over!')
-      console.log(room)
       setGameOver(true)
+      setShowScoreboard(false)
+      console.log(room)
+      console.log(showScoreboard)
+
+      // reset stats
       setRound(room.round)
       setTotalRounds(room.totalRounds)
       console.log(totalRounds)
@@ -296,31 +283,6 @@ const Home = () => {
     setIsMining(false)
   }
 
-  const renderOverlay = () => {
-    if (gameOver) {
-      return <div>Game over! Starting new game...</div>
-    } else if (showScoreboard) {
-      return <div>The word was {selectedWord}.</div>
-    } else if (drawer === address) {
-      return words.map((word, index) => {
-        return (
-          <button
-            key={index}
-            className='btn btn-outline btn-xs'
-            onClick={() => {
-              socket.emit('word_is', word)
-              setWords([])
-            }}
-          >
-            {word}
-          </button>
-        )
-      })
-    } else {
-      return <div>{shortenAddress(drawer)} is now choosing a word.</div>
-    }
-  }
-
   return (
     <div>
       {!isGameStarted ? (
@@ -334,7 +296,12 @@ const Home = () => {
             isGameHost={isGameHost}
           />
         ) : (
-          <Join address={address} createRoom={createRoom} joinRoom={joinRoom} />
+          <Join
+            address={address}
+            setName={setName}
+            createRoom={createRoom}
+            joinRoom={joinRoom}
+          />
         )
       ) : (
         <div className='flex flex-col container overflow-hidden gap-4 mx-auto'>
@@ -392,12 +359,19 @@ const Home = () => {
                         size={40}
                         isDrawer={user.address === drawer}
                       />
-                      <div
-                        className={
-                          user.address === address ? 'text-blue-500' : ''
-                        }
-                      >
-                        {shortenAddress(user.address)}
+
+                      <div className='flex flex-col'>
+                        <div
+                          className={
+                            user.address === address ? 'text-blue-500' : ''
+                          }
+                        >
+                          {user.name} {user.address === address && '(You)'}
+                        </div>
+                        <div className='p-1 bg-rose-50 rounded text-gray-500 text-2xs font-mono'>
+                          {shortenAddress(user.address)}
+                        </div>
+                        <div className='text-sm'>Points: {user.points}</div>
                       </div>
                     </div>
                   )
@@ -438,17 +412,30 @@ const Home = () => {
                   ) : (
                     <div>{shortenAddress(drawer)} is choosing a word.</div>
                   ))}
-                {showScoreboard && <div>Word was {selectedWord}.</div>}
-                {gameOver && <div>Game over! Starting new game...</div>}
+                {showScoreboard && (
+                  <div className='flex flex-col gap-2'>
+                    <div>
+                      The word was{' '}
+                      <span className='font-bold'>"{selectedWord}"</span>.
+                    </div>
+                    {guessedUsers.map((user) => {
+                      return (
+                        <div key={user.address}>
+                          {user.name}: {user.points}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+                {gameOver && <div>Game over! Starting a new game...</div>}
               </div>
 
               <DrawingBoard socket={socket} canvas={canvas} color={color} />
             </div>
 
             <div className='flex flex-col w-full h-[600px] border gap-4 p-2'>
-              {guessedUsers.includes(address) && (
+              {guessedUsers.find((user) => user.address === address) && (
                 <div className='flex flex-col items-center h-[200px] gap-2'>
-                  {showScoreboard && <div>test</div>}
                   <img
                     className='border-2 border-black h-32 w-32'
                     src={previousDrawing}
@@ -467,7 +454,9 @@ const Home = () => {
 
               <div
                 className={`flex flex-col justify-between ${
-                  guessedUsers.includes(address) ? 'h-[380px]' : 'h-full'
+                  guessedUsers.find((user) => user.address === address)
+                    ? 'h-[380px]'
+                    : 'h-full'
                 }`}
               >
                 <div className='flex flex-col overflow-y-auto'>

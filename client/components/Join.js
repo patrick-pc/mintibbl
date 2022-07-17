@@ -1,7 +1,7 @@
 import Avatar from '../components/Avatar'
 import { shortenAddress } from '../utils/shortenAddress'
 
-const Join = ({ address, joinRoom, createRoom }) => {
+const Join = ({ address, setName, joinRoom, createRoom }) => {
   return (
     <div className='flex items-center justify-center'>
       <div className='card border w-96'>
@@ -12,12 +12,12 @@ const Join = ({ address, joinRoom, createRoom }) => {
             {address ? shortenAddress(address) : ''}
           </div>
 
-          {/* <input
+          <input
             className='input input-bordered w-full'
             type='text'
-            placeholder='Room id'
-            onChange={(e) => setRoom(e.target.value)}
-          /> */}
+            placeholder='Enter your name'
+            onChange={(e) => setName(e.target.value)}
+          />
 
           <div className='card-action w-full'>
             <button

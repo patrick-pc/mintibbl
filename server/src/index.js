@@ -29,11 +29,12 @@ const {
 const publicRooms = [1]
 
 io.on('connection', (socket) => {
-  socket.on('create_room', (address) => {
+  socket.on('create_room', (address, name) => {
     const randomRoomId = Math.random().toString(36).slice(-6)
     const user = {
       id: socket.id,
       address: address,
+      name: name,
       points: 0,
     }
 
@@ -42,20 +43,21 @@ io.on('connection', (socket) => {
     io.to(randomRoomId).emit('room_data', getRoom(randomRoomId))
   })
 
-  socket.on('join_room', (roomId, address) => {
+  socket.on('join_room', (roomId, address, name) => {
     const user = {
       id: socket.id,
       address: address,
+      name: name,
       points: 0,
     }
 
     // If room is not defined, create public room
     if (!roomId) roomId = publicRooms[publicRooms.length - 1]
-    console.log(roomId)
+    console.log(`Room ID: ${roomId}`)
 
     // Check if room exists
     if (getRoom(roomId)) {
-      // If full or game already started, create new public room
+      // If room is full or game already started, create new public room
       if (getUsers(roomId).length >= 3 || getRoom(roomId).isGameStarted) {
         // change this
         roomId += 1
@@ -81,7 +83,8 @@ io.on('connection', (socket) => {
     room.drawTime = drawTime
     room.drawerAddress = getUsers(room.id)[room.drawerIndex].address
 
-    io.to(room.id).emit('game_started', {
+    // change to select_words
+    io.to(room.id).emit('select_word', {
       round: room.round,
       totalRounds: room.totalRounds,
       drawer: room.drawerAddress,
@@ -95,23 +98,53 @@ io.on('connection', (socket) => {
 
     io.to(room.id).emit('word_selected', room.selectedWord)
 
+    room.drawnUsers.push(room.drawerAddress)
+
     // Run timer
-    // room.timer = 10
-    // room.interval = setInterval(() => {
-    //   room.timer -= 1
-    //   io.to(room.id).emit('timer', room.timer)
+    room.timer = room.drawTime
+    room.interval = setInterval(() => {
+      io.to(room.id).emit('timer', room.timer)
 
-    //   if (room.timer == 0) {
-    //     io.to(room.id).emit('draw_time_over', room)
+      if (room.timer === 0) {
+        clearInterval(room.interval)
 
-    //     room.timer = 10
-    //     clearInterval(room.interval)
-    //   }
-    // }, 1000)
+        // choose drawer
+        room.drawerIndex =
+          room.drawerIndex >= getUsers(room.id).length - 1
+            ? 0
+            : room.drawerIndex + 1
+        // room.drawerIndex++
+        console.log(`Drawer index: ${room.drawerIndex}`)
+        room.drawerAddress = getUsers(room.id)[room.drawerIndex].address
+
+        // check round
+        if (room.drawnUsers.length === getUsers(room.id).length) {
+          console.log('next_round')
+          // Check if the game is over
+          if (room.round == room.totalRounds) {
+            console.log('Game over!')
+            io.to(room.id).emit('game_over', getRoom(room.id))
+            // callback()
+          }
+
+          room.round++
+          room.drawerIndex = 0
+          room.drawerAddress = getUsers(room.id)[room.drawerIndex].address
+          room.drawnUsers = []
+          room.guessedUsers = []
+        }
+
+        io.to(room.id).emit('end_turn', room.users)
+
+        // room.timer = room.drawTime
+      }
+
+      room.timer -= 1
+    }, 1000)
   })
 
   socket.on('send_message', (message, callback) => {
-    console.log(message)
+    console.log(`Message: ${message}`)
 
     const user = getUserFromSocketId(socket.id)
     const room = getRoomFromSocketId(socket.id)
@@ -120,11 +153,17 @@ io.on('connection', (socket) => {
     if (message === room.selectedWord) {
       // If not drawer and haven't guessed yet, emit message
       if (user.address !== room.drawerAddress) {
+        clearInterval(room.interval)
+
         console.log(`${user.address} guessed the word!`)
         user.points += 100
 
-        room.drawnUsers.push(room.drawerAddress) // Prev drawer
-        room.guessedUsers.push(user.address)
+        room.guessedUsers.push({
+          id: user.id,
+          address: user.address,
+          name: user.name,
+          points: 100,
+        })
 
         io.to(room.id).emit('guessed_correctly', room.guessedUsers)
         io.to(room.id).emit('message', {
@@ -144,45 +183,38 @@ io.on('connection', (socket) => {
             callback()
           }
 
+          // round increment
+          // reset
+          // end turn
           room.round++
           room.drawerIndex = 0
           room.drawerAddress = getUsers(room.id)[room.drawerIndex].address
           room.drawnUsers = []
           room.guessedUsers = []
-          // room.words = []
-          // room.selectedWord =''
 
-          // io.to(room.id).emit('select_word', {
-          //   round: room.round,
-          //   totalRounds: room.totalRounds,
-          //   drawer: room.drawerAddress,
-          //   words: getRandomWords(),
-          // })
-
-          io.to(room.id).emit('end_turn', room.selectedWord)
+          io.to(room.id).emit('end_turn', room.users)
         }
 
         // If all users have guessed, choose next drawer
-        if (room.guessedUsers.length === getUsers(room.id).length - 1) {
-          room.drawerIndex++
+        if (
+          room.guessedUsers.length === getUsers(room.id).length - 1 ||
+          room.timer === 0
+        ) {
+          // chooseDrawer()
+          // reset
+          // end turn
+          room.drawerIndex =
+            room.drawerIndex >= getUsers(room.id).length - 1
+              ? 0
+              : room.drawerIndex + 1
+          // room.drawerIndex++
+          console.log(`Drawer index: ${room.drawerIndex}`)
           room.drawerAddress = getUsers(room.id)[room.drawerIndex].address
 
-          // io.to(room.id).emit('select_word', {
-          //   round: room.round,
-          //   totalRounds: room.totalRounds,
-          //   drawer: room.drawerAddress,
-          //   words: getRandomWords(),
-          // })
-          // console.log('end turn')
-          io.to(room.id).emit('end_turn', room.selectedWord)
+          io.to(room.id).emit('end_turn', room.users)
 
           // Reset guessed users
-          // room.guessedUsers = []
-
-          // room.timer = room.drawTime
-          // clearInterval(room.interval) // delete this line
-          // console.log('clear interval')
-          // console.log(room.interval)
+          room.guessedUsers = []
         }
       }
     } else {
@@ -196,9 +228,12 @@ io.on('connection', (socket) => {
     callback()
   })
 
-  socket.on('change_turn', () => {
-    console.log('change_turn')
+  socket.on('start_turn', () => {
     const room = getRoomFromSocketId(socket.id)
+    room.timer = room.drawTime
+
+    console.log('start_turn')
+    console.log(`Drawer index: ${room.drawerIndex}`)
 
     io.to(room.id).emit('select_word', {
       round: room.round,
@@ -206,13 +241,7 @@ io.on('connection', (socket) => {
       drawer: room.drawerAddress,
       words: getRandomWords(),
     })
-
-    room.guessedUsers = []
-
-    room.timer = room.drawTime
-    clearInterval(room.interval) // delete this line
-    console.log('clear interval')
-    console.log(room.interval)
+    // clearInterval(room.interval)
   })
 
   socket.on('draw', (data) => {
@@ -225,6 +254,7 @@ io.on('connection', (socket) => {
     const { roomId, user } = leaveRoom(socket.id)
 
     if (roomId && user) {
+      clearInterval(getRoom(roomId).interval) // fix this
       io.to(roomId).emit('message', {
         sender: user.address,
         content: 'left.',

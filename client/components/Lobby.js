@@ -62,6 +62,7 @@ const Lobby = ({
             return (
               <div className='flex flex-col items-center gap-2' key={user.id}>
                 <Avatar address={user.address} size={50} />
+                <div className='text-sm'>{user.name}</div>
                 <div className='text-xs'>{shortenAddress(user.address)}</div>
               </div>
             )
