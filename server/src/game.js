@@ -1,16 +1,16 @@
 const { nftWords, commonWords, difficultWords } = require('./words')
 const rooms = []
+const publicRooms = [1]
 
 const createRoom = (roomId, user) => {
   const room = {
     id: roomId,
     users: [user],
-    isGameStarted: false,
     round: 1,
     totalRounds: 3,
     drawTime: 80,
     drawerIndex: 0,
-    drawerAddress: '',
+    drawerId: '',
     selectedWord: '',
     drawnUsers: [],
     guessedUsers: [],
@@ -27,17 +27,14 @@ const getRoom = (roomId) => rooms.find((room) => room.id === roomId)
 const getRoomFromSocketId = (socketId) =>
   rooms.find((room) => room.users.find((user) => user.id === socketId))
 
-// const getUsers = (roomId) => rooms.find((room) => room.id === roomId)?.users
 const getUsers = (roomId) => {
   const room = getRoom(roomId)
-  if (room) return room.users
+  return room.users
 }
 
-// const getUserFromSocketId = (socketId) =>
-//   getRoomFromSocketId(socketId)?.users.find((user) => user.id === socketId)
 const getUserFromSocketId = (socketId) => {
   const room = getRoomFromSocketId(socketId)
-  if (room) return room.users.find((user) => user.id === socketId)
+  return room.users.find((user) => user.id === socketId)
 }
 
 const leaveRoom = (socketId) => {
@@ -65,14 +62,8 @@ const getRandomWords = () => {
   return randomWords
 }
 
-// const chooseDrawer = (roomId) => {
-//   const room = getRoom(roomId)
-//   const users = getUsers(roomId)
-//   room.drawerIndex = room.drawerIndex >= users.length - 1 ? 0 : room.drawerIndex + 1
-//   room.drawerAddress = users[drawerIndex].address
-// }
-
 module.exports = {
+  publicRooms,
   createRoom,
   joinRoom,
   getRoom,

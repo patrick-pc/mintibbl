@@ -18,7 +18,6 @@ import toast from 'react-hot-toast'
 
 import Join from '../components/Join'
 import Lobby from '../components/Lobby'
-import { render } from 'react-dom'
 
 const socket = io.connect(process.env.NEXT_PUBLIC_SERVER_URL)
 
@@ -38,13 +37,11 @@ const Home = () => {
     address: address,
   })
 
-  // useEffect(() => {
-  //   if (!address) socket.disconnect()
-  // }, [address])
-
   const [name, setName] = useState('')
   const [isGameHost, setIsGameHost] = useState(false)
   const [isGameStarted, setIsGameStarted] = useState(false)
+
+  const [inLobby, setInLobby] = useState(false)
 
   const [users, setUsers] = useState([])
   const [message, setMessage] = useState('')
@@ -56,7 +53,7 @@ const Home = () => {
   const [guessedUsers, setGuessedUsers] = useState([])
   const [round, setRound] = useState(1)
   const [totalRounds, setTotalRounds] = useState(3)
-  const [drawTime, setDrawTime] = useState(80)
+  const [drawTime, setDrawTime] = useState(10)
   const [previousDrawing, setPreviousDrawing] = useState('')
   const [gameOver, setGameOver] = useState(false)
   const [drawTimeOver, setDrawTimeOver] = useState(false)
@@ -72,7 +69,7 @@ const Home = () => {
   const provider = useProvider()
   const signer = useSigner()
 
-  const mintibbleContract = useContract({
+  const mintibblContract = useContract({
     addressOrName: CONTRACT_ADDRESS,
     contractInterface: ABI,
     signerOrProvider: signer.data || provider,
@@ -87,16 +84,14 @@ const Home = () => {
     )
   }
 
-  const [inLobby, setInLobby] = useState(false)
-
   const createRoom = () => {
-    if (!address) {
-      toast('Connect wallet to continue.', {
-        icon: '🦊',
-      })
+    // if (!address) {
+    //   toast('Connect wallet to continue.', {
+    //     icon: '🦊',
+    //   })
 
-      return
-    }
+    //   return
+    // }
 
     console.log('create room')
     if (room !== '') {
@@ -108,13 +103,13 @@ const Home = () => {
   }
 
   const joinRoom = () => {
-    if (!address) {
-      toast('Connect wallet to continue.', {
-        icon: '🦊',
-      })
+    // if (!address) {
+    //   toast('Connect wallet to continue.', {
+    //     icon: '🦊',
+    //   })
 
-      return
-    }
+    //   return
+    // }
 
     socket.emit('join_room', room, address, name)
     setInLobby(true)
@@ -135,25 +130,21 @@ const Home = () => {
   }
 
   useEffect(() => {
-    // socket.on('room_data', (room) => {
-    //   console.log(room.users)
-    //   setUsers(room.users)
-    //   // setIsGameHost(address === room.users[0].address)
-    // })
+    socket.on('room_data', (room) => {
+      console.log(room)
+
+      setRoom(room.id)
+      setUsers(room.users)
+
+      setIsGameHost(socket.id === room.users[0].id)
+    })
 
     socket.on('message', (message) => {
       setMessages([...messages, message])
     })
-  }, [messages])
+  }, [users, messages])
 
   useEffect(() => {
-    socket.on('room_data', (room) => {
-      console.log(room)
-      setRoom(room.id)
-      setUsers(room.users)
-      setIsGameHost(address === room.users[0].address)
-    })
-
     socket.on('select_word', (game) => {
       setOverlay(true)
       setWordSelection(true)
@@ -220,7 +211,7 @@ const Home = () => {
         setGameOver(false)
       }, 3000)
     })
-  }, [socket])
+  }, [])
 
   const pinToIPFS = async (name, description, dataURL) => {
     try {
@@ -258,12 +249,12 @@ const Home = () => {
   const mintDrawing = async () => {
     try {
       const metadataURI = await pinToIPFS(
-        'Mintibble Drawing',
+        'Mintibbl Drawing',
         'Test',
         canvas.current.getDataURL()
       )
 
-      const txResponse = await mintibbleContract.mintDrawing(metadataURI)
+      const txResponse = await mintibblContract.mintDrawing(metadataURI)
       setIsMining(true)
       await txResponse.wait()
 
@@ -313,7 +304,7 @@ const Home = () => {
             <div>
               {selectedWord && (
                 <div className='text-center text-3xl'>
-                  {drawer === address ? (
+                  {drawer === socket.id ? (
                     <span className='tracking-wide font-medium'>
                       {selectedWord}
                     </span>
@@ -357,16 +348,16 @@ const Home = () => {
                       <Avatar
                         address={user.address}
                         size={40}
-                        isDrawer={user.address === drawer}
+                        isDrawer={user.id === socket.id}
                       />
 
                       <div className='flex flex-col'>
                         <div
                           className={
-                            user.address === address ? 'text-blue-500' : ''
+                            user.id === socket.id ? 'text-blue-500' : ''
                           }
                         >
-                          {user.name} {user.address === address && '(You)'}
+                          {user.name} {user.id === socket.id && '(You)'}
                         </div>
                         <div className='p-1 bg-rose-50 rounded text-gray-500 text-2xs font-mono'>
                           {shortenAddress(user.address)}
@@ -380,7 +371,7 @@ const Home = () => {
 
             <div
               className={`relative ${
-                drawer !== address && 'pointer-events-none'
+                drawer !== socket.id && 'pointer-events-none'
               }`}
             >
               <div
@@ -394,7 +385,7 @@ const Home = () => {
                 }`}
               >
                 {wordSelection &&
-                  (drawer === address ? (
+                  (drawer === socket.id ? (
                     words.map((word, index) => {
                       return (
                         <button
@@ -410,7 +401,7 @@ const Home = () => {
                       )
                     })
                   ) : (
-                    <div>{shortenAddress(drawer)} is choosing a word.</div>
+                    <div>{drawer} is choosing a word.</div>
                   ))}
                 {showScoreboard && (
                   <div className='flex flex-col gap-2'>
@@ -420,7 +411,7 @@ const Home = () => {
                     </div>
                     {guessedUsers.map((user) => {
                       return (
-                        <div key={user.address}>
+                        <div key={user.id}>
                           {user.name}: {user.points}
                         </div>
                       )
@@ -434,7 +425,7 @@ const Home = () => {
             </div>
 
             <div className='flex flex-col w-full h-[600px] border gap-4 p-2'>
-              {guessedUsers.find((user) => user.address === address) && (
+              {guessedUsers.find((user) => user.id === socket.id) && (
                 <div className='flex flex-col items-center h-[200px] gap-2'>
                   <img
                     className='border-2 border-black h-32 w-32'
@@ -454,7 +445,7 @@ const Home = () => {
 
               <div
                 className={`flex flex-col justify-between ${
-                  guessedUsers.find((user) => user.address === address)
+                  guessedUsers.find((user) => user.id === socket.id)
                     ? 'h-[380px]'
                     : 'h-full'
                 }`}

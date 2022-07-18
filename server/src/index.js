@@ -57,9 +57,8 @@ io.on('connection', (socket) => {
 
     // Check if room exists
     if (getRoom(roomId)) {
-      // If room is full or game already started, create new public room
-      if (getUsers(roomId).length >= 3 || getRoom(roomId).isGameStarted) {
-        // change this
+      // If room is full, create new public room
+      if (getUsers(roomId).length >= 3) {
         roomId += 1
         publicRooms.push(roomId)
         createRoom(roomId, user)
@@ -81,13 +80,12 @@ io.on('connection', (socket) => {
     room.round = 1
     room.totalRounds = totalRounds
     room.drawTime = drawTime
-    room.drawerAddress = getUsers(room.id)[room.drawerIndex].address
+    room.drawerId = getUsers(room.id)[room.drawerIndex].id
 
-    // change to select_words
     io.to(room.id).emit('select_word', {
       round: room.round,
       totalRounds: room.totalRounds,
-      drawer: room.drawerAddress,
+      drawer: room.drawerId,
       words: getRandomWords(),
     })
   })
@@ -98,7 +96,7 @@ io.on('connection', (socket) => {
 
     io.to(room.id).emit('word_selected', room.selectedWord)
 
-    room.drawnUsers.push(room.drawerAddress)
+    room.drawnUsers.push(room.drawerId)
 
     // Run timer
     room.timer = room.drawTime
@@ -115,7 +113,7 @@ io.on('connection', (socket) => {
             : room.drawerIndex + 1
         // room.drawerIndex++
         console.log(`Drawer index: ${room.drawerIndex}`)
-        room.drawerAddress = getUsers(room.id)[room.drawerIndex].address
+        room.drawerId = getUsers(room.id)[room.drawerIndex].id
 
         // check round
         if (room.drawnUsers.length === getUsers(room.id).length) {
@@ -129,7 +127,7 @@ io.on('connection', (socket) => {
 
           room.round++
           room.drawerIndex = 0
-          room.drawerAddress = getUsers(room.id)[room.drawerIndex].address
+          room.drawerId = getUsers(room.id)[room.drawerIndex].id
           room.drawnUsers = []
           room.guessedUsers = []
         }
@@ -152,7 +150,7 @@ io.on('connection', (socket) => {
     // Correct guess
     if (message === room.selectedWord) {
       // If not drawer and haven't guessed yet, emit message
-      if (user.address !== room.drawerAddress) {
+      if (user.address !== room.drawerId) {
         clearInterval(room.interval)
 
         console.log(`${user.address} guessed the word!`)
@@ -188,7 +186,7 @@ io.on('connection', (socket) => {
           // end turn
           room.round++
           room.drawerIndex = 0
-          room.drawerAddress = getUsers(room.id)[room.drawerIndex].address
+          room.drawerId = getUsers(room.id)[room.drawerIndex].id
           room.drawnUsers = []
           room.guessedUsers = []
 
@@ -209,7 +207,7 @@ io.on('connection', (socket) => {
               : room.drawerIndex + 1
           // room.drawerIndex++
           console.log(`Drawer index: ${room.drawerIndex}`)
-          room.drawerAddress = getUsers(room.id)[room.drawerIndex].address
+          room.drawerId = getUsers(room.id)[room.drawerIndex].id
 
           io.to(room.id).emit('end_turn', room.users)
 
@@ -238,7 +236,7 @@ io.on('connection', (socket) => {
     io.to(room.id).emit('select_word', {
       round: room.round,
       totalRounds: room.totalRounds,
-      drawer: room.drawerAddress,
+      drawer: room.drawerId,
       words: getRandomWords(),
     })
     // clearInterval(room.interval)

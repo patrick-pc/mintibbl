@@ -1,4 +1,4 @@
-export const CONTRACT_ADDRESS = '0x02236e5eC18300500521F571c88C2B75E2A67B85'
+export const CONTRACT_ADDRESS = '0x0D05f5186422e07AA1981f52bcB3d5043dBc4E45'
 export const ABI = [
   {
     inputs: [],
@@ -164,7 +164,7 @@ export const ABI = [
     inputs: [
       {
         internalType: 'string',
-        name: 'metadataURI',
+        name: 'tokenURI',
         type: 'string',
       },
     ],

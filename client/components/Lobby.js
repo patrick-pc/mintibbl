@@ -7,7 +7,7 @@ const Lobby = ({
   startGame,
   setTotalRounds,
   setDrawTime,
-  isGameHost,
+  // isGameHost,
 }) => {
   return (
     <div className='flex justify-center container overflow-hidden gap-8 mx-auto'>
@@ -19,7 +19,7 @@ const Lobby = ({
           className='select select-bordered w-full mb-4'
           defaultValue={'3'}
           onChange={(e) => setTotalRounds(e.target.value)}
-          disabled={users.length < 2 || !isGameHost}
+          disabled={users.length < 2}
         >
           <option value='2'>2</option>
           <option value='3'>3</option>
@@ -35,7 +35,7 @@ const Lobby = ({
           className='select select-bordered w-full mb-4'
           defaultValue={'80'}
           onChange={(e) => setDrawTime(e.target.value)}
-          disabled={users.length < 2 || !isGameHost}
+          disabled={users.length < 2}
         >
           <option value='60'>60</option>
           <option value='70'>70</option>
@@ -48,7 +48,7 @@ const Lobby = ({
         <button
           className='btn btn-block'
           onClick={startGame}
-          disabled={users.length < 2 || !isGameHost}
+          disabled={users.length < 2}
         >
           Start Game
         </button>
@@ -63,7 +63,8 @@ const Lobby = ({
               <div className='flex flex-col items-center gap-2' key={user.id}>
                 <Avatar address={user.address} size={50} />
                 <div className='text-sm'>{user.name}</div>
-                <div className='text-xs'>{shortenAddress(user.address)}</div>
+                <div className='text-xs'>{user.id}</div>
+                {/* <div className='text-xs'>{shortenAddress(user.address)}</div> */}
               </div>
             )
           })}

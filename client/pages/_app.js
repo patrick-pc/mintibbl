@@ -10,7 +10,7 @@ import Head from 'next/head'
 import Header from '../components/Header'
 
 const { chains, provider } = configureChains(
-  [chain.rinkeby],
+  [chain.rinkeby, chain.polygonMumbai],
   [
     alchemyProvider({ alchemyId: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY }),
     publicProvider(),
