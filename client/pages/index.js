@@ -8,6 +8,7 @@ import {
   useContract,
 } from 'wagmi'
 import io from 'socket.io-client'
+import generateName from 'sillyname'
 import Avatar from '../components/Avatar'
 import DrawingBoard from '../components/DrawingBoard'
 import { CirclePicker } from 'react-color'
@@ -37,6 +38,10 @@ const Home = () => {
     address: address,
   })
 
+  useEffect(() => {
+    ensName ? setName(ensName) : setName('')
+  }, [address])
+
   const [name, setName] = useState('')
   const [isGameHost, setIsGameHost] = useState(false)
   const [isGameStarted, setIsGameStarted] = useState(false)
@@ -53,7 +58,7 @@ const Home = () => {
   const [guessedUsers, setGuessedUsers] = useState([])
   const [round, setRound] = useState(1)
   const [totalRounds, setTotalRounds] = useState(3)
-  const [drawTime, setDrawTime] = useState(10)
+  const [drawTime, setDrawTime] = useState(80)
   const [previousDrawing, setPreviousDrawing] = useState('')
   const [gameOver, setGameOver] = useState(false)
   const [drawTimeOver, setDrawTimeOver] = useState(false)
@@ -94,11 +99,13 @@ const Home = () => {
     // }
 
     console.log('create room')
-    if (room !== '') {
-      router.replace('/', undefined, { shallow: true })
-    }
+    if (room !== '') router.replace('/', undefined, { shallow: true })
 
-    socket.emit('create_room', address, name)
+    socket.emit(
+      'create_room',
+      address ? address : '',
+      name ? name : generateName()
+    )
     setInLobby(true)
   }
 
@@ -111,7 +118,12 @@ const Home = () => {
     //   return
     // }
 
-    socket.emit('join_room', room, address, name)
+    socket.emit(
+      'join_room',
+      room,
+      address ? address : '',
+      name ? name : generateName()
+    )
     setInLobby(true)
   }
 
@@ -289,6 +301,7 @@ const Home = () => {
         ) : (
           <Join
             address={address}
+            name={ensName ? ensName : name}
             setName={setName}
             createRoom={createRoom}
             joinRoom={joinRoom}
@@ -346,6 +359,7 @@ const Home = () => {
                       key={user.id}
                     >
                       <Avatar
+                        name={user.name}
                         address={user.address}
                         size={40}
                         isDrawer={user.id === socket.id}

@@ -1,14 +1,14 @@
 import { useMemo } from 'react'
 import { useEnsAvatar } from 'wagmi'
-import { emojiAvatarForAddress } from './emojiAvatarForAddress'
+import { imageAvatarForName } from './imageAvatarForName'
 
-const Avatar = ({ address, size, isDrawer }) => {
+const Avatar = ({ name, address, size, isDrawer }) => {
   const { data: ensAvatar } = useEnsAvatar({
     addressOrName: address,
   })
-  const { color: backgroundColor, emoji } = useMemo(
-    () => emojiAvatarForAddress(address),
-    [address]
+  const { color: backgroundColor, image } = useMemo(
+    () => imageAvatarForName(name),
+    [name]
   )
 
   return ensAvatar ? (
@@ -24,17 +24,17 @@ const Avatar = ({ address, size, isDrawer }) => {
     />
   ) : (
     <div
-      className={`flex items-center justify-center overflow-hidden rounded-full ${
+      className={`flex flex-shrink-0 items-center justify-center overflow-hidden ${
         isDrawer && 'ring ring-primary ring-offset-base-100 ring-offset-2'
       }`}
-      style={{
-        ...(!ensAvatar && { backgroundColor }),
-        height: size,
-        width: size,
-        fontSize: size / 2,
-      }}
     >
-      {emoji}
+      <img
+        src={image}
+        style={{
+          height: size,
+          width: size,
+        }}
+      />
     </div>
   )
 }

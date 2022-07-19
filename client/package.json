@@ -19,6 +19,7 @@
     "react-color": "^2.19.3",
     "react-dom": "18.2.0",
     "react-hot-toast": "^2.2.0",
+    "sillyname": "^0.1.0",
     "socket.io-client": "^4.5.1",
     "wagmi": "^0.5.5"
   },
