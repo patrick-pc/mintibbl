@@ -28,6 +28,7 @@ const {
   getRandomWords,
   chooseDrawer,
   resetDrawingState,
+  resetUserPoints,
 } = require('./game')
 let interval
 
@@ -87,15 +88,18 @@ io.on('connection', (socket) => {
     room.round = 1
     room.totalRounds = totalRounds
     room.drawTime = drawTime
+    room.words = getRandomWords()
     resetDrawingState(room)
+    resetUserPoints(room)
 
-    io.to(room.id).emit('select_word', {
-      newRound: room.newRound,
-      round: room.round,
-      totalRounds: room.totalRounds,
-      drawer: room.drawer,
-      words: getRandomWords(),
-    })
+    // io.to(room.id).emit('select_word', {
+    //   newRound: room.newRound,
+    //   round: room.round,
+    //   totalRounds: room.totalRounds,
+    //   drawer: room.drawer,
+    //   words: getRandomWords(),
+    // })
+    io.to(room.id).emit('select_word', room)
   })
 
   socket.on('word_is', (word) => {
@@ -128,6 +132,7 @@ io.on('connection', (socket) => {
           room.newRound = false
         }
         io.to(room.id).emit('end_turn', room)
+        room.guessedUsers = []
       }
       room.timer -= 1
     }, 1000)
@@ -186,11 +191,12 @@ io.on('connection', (socket) => {
           chooseDrawer(room)
           room.newRound = false
           io.to(room.id).emit('end_turn', room)
+          room.guessedUsers = []
         }
       }
     } else {
       io.to(room.id).emit('message', {
-        sender: user.address,
+        sender: user.name,
         content: message,
         color: 'black',
       })
@@ -201,15 +207,17 @@ io.on('connection', (socket) => {
 
   socket.on('start_turn', () => {
     const room = getRoomFromSocketId(socket.id)
+    room.words = getRandomWords()
     room.timer = room.drawTime
 
-    io.to(room.id).emit('select_word', {
-      newRound: room.newRound,
-      round: room.round,
-      totalRounds: room.totalRounds,
-      drawer: room.drawer,
-      words: getRandomWords(),
-    })
+    // io.to(room.id).emit('select_word', {
+    //   newRound: room.newRound,
+    //   round: room.round,
+    //   totalRounds: room.totalRounds,
+    //   drawer: room.drawer,
+    //   words: getRandomWords(),
+    // })
+    io.to(room.id).emit('select_word', room)
   })
 
   socket.on('draw', (data) => {

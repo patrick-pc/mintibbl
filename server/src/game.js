@@ -6,14 +6,14 @@ const createRoom = (roomId, user) => {
   const room = {
     id: roomId,
     users: [user],
-    round: 1,
-    totalRounds: 3,
-    drawTime: 80,
-    drawerIndex: 0,
-    drawer: '',
-    selectedWord: '',
-    drawnUsers: [],
-    guessedUsers: [],
+    // round: 1,
+    // totalRounds: 3,
+    // drawTime: 80,
+    // drawerIndex: 0,
+    // drawer: '',
+    // selectedWord: '',
+    // drawnUsers: [],
+    // guessedUsers: [],
   }
   rooms.push(room)
 }
@@ -63,7 +63,6 @@ const getRandomWords = () => {
 }
 
 const chooseDrawer = (room) => {
-  room.guessedUsers = []
   room.drawerIndex =
     room.drawerIndex >= getUsers(room.id).length - 1 ? 0 : room.drawerIndex + 1
   room.drawer = getUsers(room.id)[room.drawerIndex]
@@ -74,6 +73,14 @@ const resetDrawingState = (room) => {
   room.drawer = getUsers(room.id)[room.drawerIndex]
   room.drawnUsers = []
   room.guessedUsers = []
+  room.selectedWord = ''
+}
+
+const resetUserPoints = (room) => {
+  getUsers(room.id).forEach((user) => {
+    console.log(user)
+    user.points = 0
+  })
 }
 
 module.exports = {
@@ -89,4 +96,5 @@ module.exports = {
   getRandomWords,
   chooseDrawer,
   resetDrawingState,
+  resetUserPoints,
 }
