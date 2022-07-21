@@ -17,14 +17,14 @@ const Join = ({ address, name, setName, joinRoom, createRoom }) => {
               />
               <div className='card-action w-full'>
                 <button
-                  className='btn btn-lg btn-block bg-black text-white mb-4'
+                  className='btn btn-lg btn-block bg-black text-white hover:bg-black mb-4'
                   onClick={joinRoom}
                 >
                   Play
                 </button>
 
                 <button
-                  className='btn btn-block bg-black text-white'
+                  className='btn btn-block bg-black text-white hover:bg-black'
                   onClick={createRoom}
                 >
                   Create Private Room

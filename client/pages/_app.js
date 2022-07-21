@@ -50,7 +50,7 @@ function MyApp({ Component, pageProps }) {
             <title>mintibbl.fun</title>
             <meta
               name='description'
-              content='Immortalized those hilarious drawings!'
+              content='Draw, guess, and mint with your frens!'
             />
             <link rel='icon' href='/favicon.png' />
           </Head>
