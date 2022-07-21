@@ -3,7 +3,7 @@ import Avatar from '../components/Avatar'
 const Join = ({ address, name, setName, joinRoom, createRoom }) => {
   return (
     <div className='flex flex-col md:flex-row items-center justify-center h-full w-full gap-4'>
-      <div className='w-full lg:w-[450px]'>
+      <div className='w-full lg:w-[400px]'>
         <div className='flex flex-col items-center justify-center'>
           <div className='card bg-base-100 border border-black w-96'>
             <div className='card-body items-center text-center gap-8'>
@@ -34,7 +34,7 @@ const Join = ({ address, name, setName, joinRoom, createRoom }) => {
           </div>
         </div>
       </div>
-      <div className='w-full lg:w-[650px]'>
+      <div className='w-full lg:w-[700px]'>
         <div className='flex flex-col items-center justify-center gap-4 m-4'>
           <h1 className='bg-clip-text bg-gradient-to-b from-gray-900 via-purple-900 to-violet-600 text-transparent text-6xl font-bold'>
             Draw some cool sh*t, laugh while guessing, and make them NFTs!
