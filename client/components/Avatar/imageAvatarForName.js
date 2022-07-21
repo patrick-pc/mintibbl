@@ -25,6 +25,7 @@ const colors = [
 ]
 
 const avatars = [
+  { color: colors[0], image: '/img/monster.png' },
   { color: colors[0], image: '/img/bear.png' },
   { color: colors[0], image: '/img/bunny.png' },
   { color: colors[0], image: '/img/cat.png' },
@@ -36,7 +37,6 @@ const avatars = [
   { color: colors[0], image: '/img/kitty.png' },
   { color: colors[0], image: '/img/koala.png' },
   { color: colors[0], image: '/img/monkey.png' },
-  { color: colors[0], image: '/img/monster.png' },
   { color: colors[0], image: '/img/octopus.png' },
   { color: colors[0], image: '/img/poop.png' },
   { color: colors[0], image: '/img/rat.png' },

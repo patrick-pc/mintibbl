@@ -1,37 +1,45 @@
 import Avatar from '../components/Avatar'
-import { shortenAddress } from '../utils/shortenAddress'
 
 const Join = ({ address, name, setName, joinRoom, createRoom }) => {
   return (
-    <div className='flex items-center justify-center'>
-      <div className='card border w-96'>
-        <div className='card-body items-center text-center gap-8'>
-          <Avatar name={name} address={address} size={75} />
+    <div className='flex flex-col md:flex-row items-center justify-center h-full w-full gap-4 pb-12'>
+      <div className='w-full lg:w-[450px]'>
+        <div className='flex flex-col items-center justify-center'>
+          <div className='card bg-base-100 border border-black w-96'>
+            <div className='card-body items-center text-center gap-8'>
+              <Avatar name={name} address={address} size={75} />
+              <input
+                className='input input-bordered border-black w-full focus:outline-none'
+                type='text'
+                placeholder='Enter your name'
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <div className='card-action w-full'>
+                <button
+                  className='btn btn-lg btn-block bg-black text-white mb-4'
+                  onClick={joinRoom}
+                >
+                  Play
+                </button>
 
-          <div className='card-title'>
-            {address ? shortenAddress(address) : ''}
+                <button
+                  className='btn btn-block bg-black text-white'
+                  onClick={createRoom}
+                >
+                  Create Private Room
+                </button>
+              </div>
+            </div>
           </div>
-
-          <input
-            className='input input-bordered w-full'
-            type='text'
-            placeholder='Enter your name'
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-
-          <div className='card-action w-full'>
-            <button
-              className='btn btn-outline btn-block mb-4'
-              onClick={joinRoom}
-            >
-              Play
-            </button>
-
-            <button className='btn btn-outline btn-block' onClick={createRoom}>
-              Create Private Room
-            </button>
-          </div>
+        </div>
+      </div>
+      <div className='w-full lg:w-[650px]'>
+        <div className='flex flex-col items-center justify-center gap-4 m-4'>
+          <h1 className='bg-clip-text bg-gradient-to-tr from-blue-500 to-red-500 text-transparent text-6xl font-bold'>
+            Draw some cool sh*t, laugh while guessing, and make them NFTs!
+          </h1>
+          <div className='text-gray-500 text-sm'>Mint is free!</div>
         </div>
       </div>
     </div>

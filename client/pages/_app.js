@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
 import Head from 'next/head'
 import Header from '../components/Header'
+import Footer from '../components/Footer'
 
 const { chains, provider } = configureChains(
   [chain.mainnet, chain.rinkeby, chain.polygonMumbai],
@@ -18,7 +19,7 @@ const { chains, provider } = configureChains(
 )
 
 const { connectors } = getDefaultWallets({
-  appName: 'Mintibble',
+  appName: 'mintibbl.fun',
   chains,
 })
 
@@ -46,15 +47,18 @@ function MyApp({ Component, pageProps }) {
       <WagmiConfig client={wagmiClient}>
         <RainbowKitProvider chains={chains}>
           <Head>
-            <title>Mintibbl</title>
+            <title>mintibbl.fun</title>
             <meta
               name='description'
               content='Immortalized those hilarious drawings!'
             />
-            <link rel='icon' href='/favicon.ico' />
+            <link rel='icon' href='/favicon.png' />
           </Head>
-          <Header />
-          <Component {...pageProps} />
+          <div className='min-h-screen w-full'>
+            <Header />
+            <Component {...pageProps} />
+            {/* <Footer /> */}
+          </div>
           <Toaster />
         </RainbowKitProvider>
       </WagmiConfig>

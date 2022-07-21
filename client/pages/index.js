@@ -8,9 +8,10 @@ import {
   useContract,
 } from 'wagmi'
 import io from 'socket.io-client'
+import axios from 'axios'
 import generateName from 'sillyname'
 import toast from 'react-hot-toast'
-import axios from 'axios'
+import FadeIn from 'react-fade-in'
 import { CirclePicker } from 'react-color'
 import { shortenAddress } from '../utils/shortenAddress'
 import { CONTRACT_ADDRESS, ABI } from '../constants'
@@ -47,7 +48,7 @@ const Home = () => {
   const [inLobby, setInLobby] = useState(false)
   const [round, setRound] = useState(1)
   const [totalRounds, setTotalRounds] = useState(3)
-  const [drawTime, setDrawTime] = useState(5)
+  const [drawTime, setDrawTime] = useState(80)
   const [drawer, setDrawer] = useState('')
   const [words, setWords] = useState([])
   const [selectedWord, setSelectedWord] = useState('')
@@ -75,7 +76,7 @@ const Home = () => {
     socket.emit(
       'create_room',
       address ? address : '',
-      name ? name : generateName()
+      name ? name : generateName().split(' ')[0]
     )
     setInLobby(true)
   }
@@ -85,7 +86,7 @@ const Home = () => {
       'join_room',
       roomId,
       address ? address : '',
-      name ? name : generateName(),
+      name ? name : generateName().split(' ')[0],
       (room) => {
         if (room.isGameStarted) {
           setIsGameStarted(true)
@@ -95,6 +96,7 @@ const Home = () => {
           setDrawTime(room.drawTime)
           setSelectedWord(room.selectedWord)
           setDrawer(room.drawer)
+          setGuessedUsers(room.guessedUsers)
         } else {
           setInLobby(true)
         }
@@ -144,7 +146,6 @@ const Home = () => {
     socket.on('select_word', (room) => {
       setIsGameStarted(true)
 
-      console.log(room.newRound)
       if (room.newRound) {
         setCanvasStatus('new_round')
 
@@ -156,24 +157,29 @@ const Home = () => {
       }
 
       // Game options
+      setUsers(room.users)
       setRound(room.round)
       setTotalRounds(room.totalRounds)
       setDrawer(room.drawer)
       setWords(room.words)
       setSelectedWord('')
+
+      // setTimeout(() => {
+      //   console.log('word_is')
+      //   socket.emit('word_is', room.words[2])
+      // }, 5000)
     })
 
     socket.on('word_selected', (word) => {
       setCanvasStatus('drawing')
 
-      // Reset
-      setGuessedUsers([])
+      // setGuessedUsers([])
       setSelectedWord(word)
       canvas.current.clear()
     })
 
     socket.on('guessed_correctly', (guessedUsers) => {
-      setGuessedUsers(guessedUsers)
+      // setGuessedUsers(guessedUsers)
       console.log(guessedUsers)
     })
 
@@ -187,6 +193,7 @@ const Home = () => {
       setCanvasStatus('end_turn')
       setPreviousDrawing(canvas.current.getDataURL())
       setUsers(room.users)
+      setGuessedUsers(room.guessedUsers)
 
       setTimeout(() => {
         socket.emit('start_turn')
@@ -196,16 +203,18 @@ const Home = () => {
     socket.on('game_over', (room) => {
       setCanvasStatus('game_over')
 
-      // Reset stats
-      // setRound(room.round)
-      // setTotalRounds(room.totalRounds)
-      // console.log(totalRounds)
-
       setTimeout(() => {
         setIsGameStarted(false)
         setInLobby(true)
 
-        // TODO: Reset game state also drawing canvas and previous drawing
+        setRound(room.round)
+        setTotalRounds(room.totalRounds)
+        setDrawTime(room.drawTime)
+        setSelectedWord('')
+        setDrawer('')
+        setGuessedUsers([])
+        setMessages([])
+        setMessage('')
       }, 5000)
     })
   }, [])
@@ -273,7 +282,6 @@ const Home = () => {
   }
 
   const renderNewRound = () => {
-    console.log('render new round')
     return <div>Round {round}</div>
   }
 
@@ -302,7 +310,7 @@ const Home = () => {
     return (
       <div className='flex flex-col gap-2'>
         <div>
-          The word was <span className='font-bold'>"{selectedWord}"</span>.
+          The word was: <span className='font-bold'>{selectedWord}</span>.
         </div>
         {guessedUsers.map((user) => {
           return (
@@ -316,7 +324,7 @@ const Home = () => {
   }
 
   const renderResult = () => {
-    return <div>Game over! Starting a new game...</div>
+    return <div>Game over!</div>
   }
 
   const renderCanvasStatus = () => {
@@ -335,7 +343,7 @@ const Home = () => {
   }
 
   return (
-    <div>
+    <FadeIn>
       {!isGameStarted ? (
         inLobby && users ? (
           <Lobby
@@ -452,7 +460,7 @@ const Home = () => {
             </div>
 
             <div className='flex flex-col w-full h-[600px] border gap-4 p-2'>
-              {guessedUsers.find((user) => user.id === socket.id) && (
+              {guessedUsers[0]?.id === socket.id && (
                 <div className='flex flex-col items-center h-[200px] gap-2'>
                   <img
                     className='border-2 border-black h-32 w-32'
@@ -472,9 +480,7 @@ const Home = () => {
 
               <div
                 className={`flex flex-col justify-between ${
-                  guessedUsers.find((user) => user.id === socket.id)
-                    ? 'h-[380px]'
-                    : 'h-full'
+                  guessedUsers[0]?.id === socket.id ? 'h-[380px]' : 'h-full'
                 }`}
               >
                 <div className='flex flex-col overflow-y-auto'>
@@ -487,7 +493,7 @@ const Home = () => {
                         >
                           <div className='text-sm'>
                             <span className='font-medium mr-2'>
-                              {message.sender && shortenAddress(message.sender)}
+                              {message.sender && message.sender}
                             </span>
                             <span>{message.content}</span>
                           </div>
@@ -516,7 +522,7 @@ const Home = () => {
           </div>
         </div>
       )}
-    </div>
+    </FadeIn>
   )
 }
 
