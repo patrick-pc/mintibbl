@@ -9,16 +9,15 @@ import {
 } from 'wagmi'
 import io from 'socket.io-client'
 import generateName from 'sillyname'
-import Avatar from '../components/Avatar'
-import DrawingBoard from '../components/DrawingBoard'
+import toast from 'react-hot-toast'
+import axios from 'axios'
 import { CirclePicker } from 'react-color'
 import { shortenAddress } from '../utils/shortenAddress'
-import axios from 'axios'
 import { CONTRACT_ADDRESS, ABI } from '../constants'
-import toast from 'react-hot-toast'
-
 import Join from '../components/Join'
 import Lobby from '../components/Lobby'
+import Avatar from '../components/Avatar'
+import DrawingBoard from '../components/DrawingBoard'
 
 const socket = io.connect(process.env.NEXT_PUBLIC_SERVER_URL)
 
@@ -26,50 +25,10 @@ const Home = () => {
   const router = useRouter()
   const { pid } = router.query
 
-  const [room, setRoom] = useState('')
-  useEffect(() => {
-    if (!pid) return
-
-    setRoom(pid)
-  }, [pid])
-
   const { address } = useAccount()
   const { data: ensName } = useEnsName({
     address: address,
   })
-
-  useEffect(() => {
-    ensName ? setName(ensName) : setName('')
-  }, [address])
-
-  const [name, setName] = useState('')
-  const [isGameHost, setIsGameHost] = useState(false)
-  const [isGameStarted, setIsGameStarted] = useState(false)
-
-  const [inLobby, setInLobby] = useState(false)
-
-  const [users, setUsers] = useState([])
-  const [message, setMessage] = useState('')
-  const [messages, setMessages] = useState([])
-
-  const [drawer, setDrawer] = useState('')
-  const [words, setWords] = useState([])
-  const [selectedWord, setSelectedWord] = useState('')
-  const [guessedUsers, setGuessedUsers] = useState([])
-  const [round, setRound] = useState(1)
-  const [totalRounds, setTotalRounds] = useState(3)
-  const [drawTime, setDrawTime] = useState(80)
-  const [previousDrawing, setPreviousDrawing] = useState('')
-  const [gameOver, setGameOver] = useState(false)
-  const [drawTimeOver, setDrawTimeOver] = useState(false)
-
-  const [overlay, setOverlay] = useState(false)
-  const [wordSelection, setWordSelection] = useState(false)
-  const [showScoreboard, setShowScoreboard] = useState(false)
-
-  const canvas = useRef(null)
-  const [color, setColor] = useState('#000000')
-  const [isMining, setIsMining] = useState(false)
 
   const provider = useProvider()
   const signer = useSigner()
@@ -80,26 +39,38 @@ const Home = () => {
     signerOrProvider: signer.data || provider,
   })
 
+  const [roomId, setRoomId] = useState('')
+  const [name, setName] = useState('')
+  const [isGameHost, setIsGameHost] = useState(false)
+  const [isGameStarted, setIsGameStarted] = useState(false)
+
+  const [inLobby, setInLobby] = useState(false)
+  const [round, setRound] = useState(1)
+  const [totalRounds, setTotalRounds] = useState(3)
+  const [drawTime, setDrawTime] = useState(5)
+  const [drawer, setDrawer] = useState('')
+  const [words, setWords] = useState([])
+  const [selectedWord, setSelectedWord] = useState('')
+  const [guessedUsers, setGuessedUsers] = useState([])
+  const [previousDrawing, setPreviousDrawing] = useState('')
+
+  const [users, setUsers] = useState([])
+  const [message, setMessage] = useState('')
+  const [messages, setMessages] = useState([])
+
+  const canvas = useRef(null)
+  const [canvasStatus, setCanvasStatus] = useState('')
+  const [color, setColor] = useState('#000000')
+  const [isMining, setIsMining] = useState(false)
+
   const updateColor = (value) => {
-    console.log(
-      `rgba(${value.rgb.r},${value.rgb.g},${value.rgb.b},${value.rgb.a})`
-    )
     setColor(
       `rgba(${value.rgb.r},${value.rgb.g},${value.rgb.b},${value.rgb.a})`
     )
   }
 
   const createRoom = () => {
-    // if (!address) {
-    //   toast('Connect wallet to continue.', {
-    //     icon: '🦊',
-    //   })
-
-    //   return
-    // }
-
-    console.log('create room')
-    if (room !== '') router.replace('/', undefined, { shallow: true })
+    if (roomId !== '') router.replace('/', undefined, { shallow: true })
 
     socket.emit(
       'create_room',
@@ -110,26 +81,28 @@ const Home = () => {
   }
 
   const joinRoom = () => {
-    // if (!address) {
-    //   toast('Connect wallet to continue.', {
-    //     icon: '🦊',
-    //   })
-
-    //   return
-    // }
-
     socket.emit(
       'join_room',
-      room,
+      roomId,
       address ? address : '',
-      name ? name : generateName()
+      name ? name : generateName(),
+      (room) => {
+        if (room.isGameStarted) {
+          setIsGameStarted(true)
+          setInLobby(false)
+          setRound(room.round)
+          setTotalRounds(room.totalRounds)
+          setDrawTime(room.drawTime)
+          setSelectedWord(room.selectedWord)
+          setDrawer(room.drawer)
+        } else {
+          setInLobby(true)
+        }
+      }
     )
-    setInLobby(true)
   }
 
   const startGame = () => {
-    console.log(totalRounds)
-    console.log(drawTime)
     socket.emit('start_game', totalRounds, drawTime)
   }
 
@@ -141,13 +114,23 @@ const Home = () => {
     }
   }
 
+  // Get room id from url
+  useEffect(() => {
+    if (!pid) return
+
+    setRoomId(pid)
+  }, [pid])
+
+  // Check wallet address
+  useEffect(() => {
+    ensName ? setName(ensName) : setName('')
+  }, [address])
+
+  // Users and messages handler
   useEffect(() => {
     socket.on('room_data', (room) => {
-      console.log(room)
-
-      setRoom(room.id)
+      setRoomId(room.id)
       setUsers(room.users)
-
       setIsGameHost(socket.id === room.users[0].id)
     })
 
@@ -156,27 +139,34 @@ const Home = () => {
     })
   }, [users, messages])
 
+  // Game handler
   useEffect(() => {
-    socket.on('select_word', (game) => {
-      setOverlay(true)
-      setWordSelection(true)
-
-      console.log('select words')
-      console.log(game)
-      setRound(game.round)
-      setTotalRounds(game.totalRounds)
-      setDrawer(game.drawer)
-      setWords(game.words)
-      setSelectedWord('')
-
+    socket.on('select_word', (room) => {
       setIsGameStarted(true)
+
+      console.log(room.newRound)
+      if (room.newRound) {
+        setCanvasStatus('new_round')
+
+        setTimeout(() => {
+          setCanvasStatus('select_word')
+        }, 3000)
+      } else {
+        setCanvasStatus('select_word')
+      }
+
+      // Game options
+      setRound(room.round)
+      setTotalRounds(room.totalRounds)
+      setDrawer(room.drawer)
+      setWords(room.words)
+      setSelectedWord('')
     })
 
     socket.on('word_selected', (word) => {
-      setOverlay(false)
-      setWordSelection(false)
+      setCanvasStatus('drawing')
 
-      // reset
+      // Reset
       setGuessedUsers([])
       setSelectedWord(word)
       canvas.current.clear()
@@ -191,40 +181,36 @@ const Home = () => {
       setDrawTime(timer)
     })
 
-    socket.on('end_turn', (users) => {
-      setOverlay(true)
+    socket.on('end_turn', (room) => {
+      if (room.isGameOver) return
+
+      setCanvasStatus('end_turn')
       setPreviousDrawing(canvas.current.getDataURL())
-      console.log('end_turn')
-      console.log(users)
-      setShowScoreboard(true)
-      setUsers(users)
-      console.log(showScoreboard)
+      setUsers(room.users)
 
       setTimeout(() => {
-        setShowScoreboard(false)
-        console.log('start_turn')
         socket.emit('start_turn')
       }, 3000)
     })
 
     socket.on('game_over', (room) => {
-      setGameOver(true)
-      setShowScoreboard(false)
-      console.log(room)
-      console.log(showScoreboard)
+      setCanvasStatus('game_over')
 
-      // reset stats
-      setRound(room.round)
-      setTotalRounds(room.totalRounds)
-      console.log(totalRounds)
+      // Reset stats
+      // setRound(room.round)
+      // setTotalRounds(room.totalRounds)
+      // console.log(totalRounds)
 
       setTimeout(() => {
-        startGame()
-        setGameOver(false)
-      }, 3000)
+        setIsGameStarted(false)
+        setInLobby(true)
+
+        // TODO: Reset game state also drawing canvas and previous drawing
+      }, 5000)
     })
   }, [])
 
+  // Mint drawing
   const pinToIPFS = async (name, description, dataURL) => {
     try {
       const data = JSON.stringify({
@@ -286,12 +272,74 @@ const Home = () => {
     setIsMining(false)
   }
 
+  const renderNewRound = () => {
+    console.log('render new round')
+    return <div>Round {round}</div>
+  }
+
+  const renderWordSelection = () => {
+    if (drawer.id === socket.id) {
+      return words.map((word, index) => {
+        return (
+          <button
+            key={index}
+            className='btn btn-outline btn-xs'
+            onClick={() => {
+              socket.emit('word_is', word)
+              setWords([])
+            }}
+          >
+            {word}
+          </button>
+        )
+      })
+    } else {
+      return <div>{drawer.name} is choosing a word.</div>
+    }
+  }
+
+  const renderScoreboard = () => {
+    return (
+      <div className='flex flex-col gap-2'>
+        <div>
+          The word was <span className='font-bold'>"{selectedWord}"</span>.
+        </div>
+        {guessedUsers.map((user) => {
+          return (
+            <div key={user.id}>
+              {user.name}: {user.points}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  const renderResult = () => {
+    return <div>Game over! Starting a new game...</div>
+  }
+
+  const renderCanvasStatus = () => {
+    switch (canvasStatus) {
+      case 'new_round':
+        return renderNewRound()
+      case 'select_word':
+        return renderWordSelection()
+      case 'end_turn':
+        return renderScoreboard()
+      case 'game_over':
+        return renderResult()
+      default:
+        break
+    }
+  }
+
   return (
     <div>
       {!isGameStarted ? (
         inLobby && users ? (
           <Lobby
-            room={room}
+            roomId={roomId}
             users={users}
             startGame={startGame}
             setTotalRounds={setTotalRounds}
@@ -317,7 +365,7 @@ const Home = () => {
             <div>
               {selectedWord && (
                 <div className='text-center text-3xl'>
-                  {drawer === socket.id ? (
+                  {drawer.id === socket.id ? (
                     <span className='tracking-wide font-medium'>
                       {selectedWord}
                     </span>
@@ -362,7 +410,6 @@ const Home = () => {
                         name={user.name}
                         address={user.address}
                         size={40}
-                        isDrawer={user.id === socket.id}
                       />
 
                       <div className='flex flex-col'>
@@ -385,54 +432,20 @@ const Home = () => {
 
             <div
               className={`relative ${
-                drawer !== socket.id && 'pointer-events-none'
+                drawer.id !== socket.id && 'pointer-events-none'
               }`}
             >
               <div
                 className={`absolute h-full w-full top-0 left-0 bg-black opacity-10 z-10 ${
-                  overlay ? 'block' : 'hidden'
+                  canvasStatus !== 'drawing' ? 'block' : 'hidden'
                 }`}
               ></div>
               <div
                 className={`absolute flex items-center justify-center h-full w-full gap-4 z-20 ${
-                  overlay ? 'block' : 'hidden'
+                  canvasStatus !== 'drawing' ? 'block' : 'hidden'
                 }`}
               >
-                {wordSelection &&
-                  (drawer === socket.id ? (
-                    words.map((word, index) => {
-                      return (
-                        <button
-                          key={index}
-                          className='btn btn-outline btn-xs'
-                          onClick={() => {
-                            socket.emit('word_is', word)
-                            setWords([])
-                          }}
-                        >
-                          {word}
-                        </button>
-                      )
-                    })
-                  ) : (
-                    <div>{drawer} is choosing a word.</div>
-                  ))}
-                {showScoreboard && (
-                  <div className='flex flex-col gap-2'>
-                    <div>
-                      The word was{' '}
-                      <span className='font-bold'>"{selectedWord}"</span>.
-                    </div>
-                    {guessedUsers.map((user) => {
-                      return (
-                        <div key={user.id}>
-                          {user.name}: {user.points}
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-                {gameOver && <div>Game over! Starting a new game...</div>}
+                {renderCanvasStatus()}
               </div>
 
               <DrawingBoard socket={socket} canvas={canvas} color={color} />

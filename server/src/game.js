@@ -10,7 +10,7 @@ const createRoom = (roomId, user) => {
     totalRounds: 3,
     drawTime: 80,
     drawerIndex: 0,
-    drawerId: '',
+    drawer: '',
     selectedWord: '',
     drawnUsers: [],
     guessedUsers: [],
@@ -62,6 +62,20 @@ const getRandomWords = () => {
   return randomWords
 }
 
+const chooseDrawer = (room) => {
+  room.guessedUsers = []
+  room.drawerIndex =
+    room.drawerIndex >= getUsers(room.id).length - 1 ? 0 : room.drawerIndex + 1
+  room.drawer = getUsers(room.id)[room.drawerIndex]
+}
+
+const resetDrawingState = (room) => {
+  room.drawerIndex = 0
+  room.drawer = getUsers(room.id)[room.drawerIndex]
+  room.drawnUsers = []
+  room.guessedUsers = []
+}
+
 module.exports = {
   publicRooms,
   createRoom,
@@ -73,4 +87,6 @@ module.exports = {
   leaveRoom,
   deleteRoom,
   getRandomWords,
+  chooseDrawer,
+  resetDrawingState,
 }

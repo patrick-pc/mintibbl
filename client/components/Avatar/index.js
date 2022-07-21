@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useEnsAvatar } from 'wagmi'
 import { imageAvatarForName } from './imageAvatarForName'
 
-const Avatar = ({ name, address, size, isDrawer }) => {
+const Avatar = ({ name, address, size }) => {
   const { data: ensAvatar } = useEnsAvatar({
     addressOrName: address,
   })
@@ -13,9 +13,7 @@ const Avatar = ({ name, address, size, isDrawer }) => {
 
   return ensAvatar ? (
     <div
-      className={`bg-cover bg-center rounded-full ${
-        isDrawer && 'ring ring-primary ring-offset-base-100 ring-offset-2'
-      }`}
+      className='bg-cover bg-center rounded-full'
       style={{
         backgroundImage: `url(${ensAvatar})`,
         height: size,
@@ -23,11 +21,7 @@ const Avatar = ({ name, address, size, isDrawer }) => {
       }}
     />
   ) : (
-    <div
-      className={`flex flex-shrink-0 items-center justify-center overflow-hidden ${
-        isDrawer && 'ring ring-primary ring-offset-base-100 ring-offset-2'
-      }`}
-    >
+    <div className='flex flex-shrink-0 items-center justify-center overflow-hidden'>
       <img
         src={image}
         style={{

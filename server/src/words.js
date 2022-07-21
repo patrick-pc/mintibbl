@@ -1,4 +1,5 @@
 nftWords = [
+  'gm',
   'cryptopunks',
   'bayc',
   'fidenza',

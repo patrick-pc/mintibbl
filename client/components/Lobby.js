@@ -2,7 +2,7 @@ import Avatar from './Avatar'
 import { shortenAddress } from '../utils/shortenAddress'
 
 const Lobby = ({
-  room,
+  roomId,
   users,
   startGame,
   setTotalRounds,
@@ -55,7 +55,7 @@ const Lobby = ({
       </div>
 
       <div>
-        <button className='mb-4'>{`${process.env.NEXT_PUBLIC_CLIENT_URL}?pid=${room}`}</button>
+        <button className='mb-4'>{`${process.env.NEXT_PUBLIC_CLIENT_URL}?pid=${roomId}`}</button>
 
         <div className='flex flex-wrap items-center w-96 gap-4'>
           {users?.map((user) => {
