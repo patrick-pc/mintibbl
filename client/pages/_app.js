@@ -57,7 +57,7 @@ function MyApp({ Component, pageProps }) {
           <div className='min-h-screen w-full'>
             <Header />
             <Component {...pageProps} />
-            {/* <Footer /> */}
+            <Footer />
           </div>
           <Toaster />
         </RainbowKitProvider>
