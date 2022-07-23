@@ -5,6 +5,7 @@ import { imageAvatarForName } from './imageAvatarForName'
 const Avatar = ({ name, address, size }) => {
   const { data: ensAvatar } = useEnsAvatar({
     addressOrName: address,
+    chainId: 1,
   })
   const { color: backgroundColor, image } = useMemo(
     () => imageAvatarForName(name),

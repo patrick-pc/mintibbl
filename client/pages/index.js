@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, lazy } from 'react'
 import {
   useAccount,
   useEnsName,
@@ -12,6 +12,7 @@ import axios from 'axios'
 import generateName from 'sillyname'
 import toast from 'react-hot-toast'
 import FadeIn from 'react-fade-in'
+import { Orbit } from '@uiball/loaders'
 import { CirclePicker } from 'react-color'
 import { shortenAddress } from '../utils/shortenAddress'
 import { CONTRACT_ADDRESS, ABI } from '../constants'
@@ -29,6 +30,7 @@ const Home = () => {
   const { address } = useAccount()
   const { data: ensName } = useEnsName({
     address: address,
+    chainId: 1,
   })
 
   const provider = useProvider()
@@ -54,6 +56,8 @@ const Home = () => {
   const [selectedWord, setSelectedWord] = useState('')
   const [guessedUsers, setGuessedUsers] = useState([])
   const [previousDrawing, setPreviousDrawing] = useState('')
+  const [previousDrawer, setPreviousDrawer] = useState('')
+  const [previousWord, setPreviousWord] = useState('')
 
   const [users, setUsers] = useState([])
   const [message, setMessage] = useState('')
@@ -63,6 +67,8 @@ const Home = () => {
   const [canvasStatus, setCanvasStatus] = useState('')
   const [color, setColor] = useState('#000000')
   const [isMining, setIsMining] = useState(false)
+  const [isFreeMint, setIsFreeMint] = useState(true)
+  const [isContractMint, setIsContractMint] = useState(true)
 
   const updateColor = (value) => {
     setColor(
@@ -76,6 +82,7 @@ const Home = () => {
     socket.emit(
       'create_room',
       address ? address : '',
+      ensName ? ensName : '',
       name ? name : generateName().split(' ')[0]
     )
     setInLobby(true)
@@ -86,6 +93,7 @@ const Home = () => {
       'join_room',
       roomId,
       address ? address : '',
+      ensName ? ensName : '',
       name ? name : generateName().split(' ')[0],
       (room) => {
         if (room.isGameStarted) {
@@ -125,6 +133,13 @@ const Home = () => {
 
   // Check wallet address
   useEffect(() => {
+    socket.emit(
+      'wallet_connected',
+      roomId,
+      address ? address : '',
+      ensName ? ensName : '',
+      name ? name : generateName().split(' ')[0]
+    )
     ensName ? setName(ensName) : setName('')
   }, [address])
 
@@ -173,27 +188,35 @@ const Home = () => {
     socket.on('word_selected', (word) => {
       setCanvasStatus('drawing')
 
-      // setGuessedUsers([])
       setSelectedWord(word)
       canvas.current.clear()
     })
 
-    socket.on('guessed_correctly', (guessedUsers) => {
-      // setGuessedUsers(guessedUsers)
-      console.log(guessedUsers)
-    })
+    // socket.on('guessed_correctly', (guessedUsers) => {
+    //   // setGuessedUsers(guessedUsers)
+    //   console.log(guessedUsers)
+    // })
 
     socket.on('timer', (timer) => {
       setDrawTime(timer)
     })
 
     socket.on('end_turn', (room) => {
+      setPreviousDrawer(
+        room.drawnUsers[
+          room.drawerIndex === 0
+            ? room.drawnUsers.length - 1
+            : room.drawerIndex - 1
+        ]
+      )
+      setPreviousWord(room.selectedWord)
+      setPreviousDrawing(canvas.current.getDataURL())
+      setGuessedUsers(room.guessedUsers)
+
       if (room.isGameOver) return
 
       setCanvasStatus('end_turn')
-      setPreviousDrawing(canvas.current.getDataURL())
       setUsers(room.users)
-      setGuessedUsers(room.guessedUsers)
 
       setTimeout(() => {
         socket.emit('start_turn')
@@ -215,59 +238,166 @@ const Home = () => {
         setGuessedUsers([])
         setMessages([])
         setMessage('')
-      }, 5000)
+      }, 10000)
     })
   }, [])
 
   // Mint drawing
-  const pinToIPFS = async (name, description, dataURL) => {
+  const pinToIPFS = async () => {
     try {
-      const data = JSON.stringify({
-        pinataOptions: {
-          cidVersion: 1,
-        },
-        pinataMetadata: {
-          name: 'Mintibble',
-        },
-        pinataContent: {
-          name: name,
-          description: description,
-          image: dataURL,
-        },
+      let artist = 'anonymous'
+      let title = 'Mintibbl Drawing'
+      let attributes = []
+
+      // Get artist
+      if (previousDrawer.ensName) {
+        artist = previousDrawer.ensName
+      } else if (previousDrawer.address) {
+        artist = previousDrawer.address
+      }
+
+      if (isFreeMint) {
+        title = `Mintibbl Drawing (Test) - ${previousWord}`
+        attributes = [
+          {
+            trait_type: 'Collection',
+            value: 'Mintibbl - Test',
+          },
+          {
+            trait_type: 'Word',
+            value: previousWord,
+          },
+          {
+            trait_type: 'Artist',
+            value: artist,
+          },
+        ]
+      } else if (isContractMint) {
+        title = previousWord
+        attributes = [
+          {
+            trait_type: 'Word',
+            value: previousWord,
+          },
+          {
+            trait_type: 'Artist',
+            value: artist,
+          },
+        ]
+      }
+
+      const metadata = JSON.stringify({
+        description: `A mintibbl drawing by ${artist}`,
+        external_url: '',
+        image: canvas.current.getDataURL(),
+        name: title,
+        attributes: attributes,
       })
+      const img = dataURLtoFile(canvas.current.getDataURL(), 'image.png')
+      const data = {
+        metadata: metadata,
+        image: img,
+        asset: img,
+      }
       const config = {
-        method: 'post',
-        url: 'https://api.pinata.cloud/pinning/pinJSONToIPFS',
+        method: 'POST',
+        url: 'https://api.mintnft.today/v1/upload/single',
         headers: {
-          'Content-Type': 'application/json',
-          pinata_api_key: `${process.env.NEXT_PUBLIC_PINATA_API_KEY}`,
-          pinata_secret_api_key: `${process.env.NEXT_PUBLIC_PINATA_API_SECRET}`,
+          'content-type': 'multipart/form-data',
+          'x-api-key': process.env.NEXT_PUBLIC_MINT_NFT_API_KEY,
         },
         data: data,
       }
       const res = await axios(config)
 
-      return `https://ipfs.io/ipfs/${res.data.IpfsHash}`
+      return res.data.data.url
     } catch (error) {
       console.log(error)
     }
   }
-
-  const mintDrawing = async () => {
+  const freeMintDrawing = async () => {
     try {
-      const metadataURI = await pinToIPFS(
-        'Mintibbl Drawing',
-        'Test',
-        canvas.current.getDataURL()
-      )
+      if (!address) {
+        toast('Connect wallet to continue.', {
+          icon: '🦊',
+        })
 
-      const txResponse = await mintibblContract.mintDrawing(metadataURI)
+        return
+      }
+      setIsContractMint(false)
       setIsMining(true)
-      await txResponse.wait()
 
-      toast('Minted drawing!', {
-        icon: '🎉',
+      const tokenUri = await pinToIPFS()
+      const data = JSON.stringify({
+        wallet: address,
+        type: 'ERC721',
+        network: 'mainnet',
+        amount: 1,
+        tokenUri: tokenUri,
       })
+      const config = {
+        method: 'POST',
+        url: 'https://api.mintnft.today/v1/mint/single',
+        headers: {
+          'content-type': 'application/json',
+          'x-api-key': process.env.NEXT_PUBLIC_MINT_NFT_API_KEY,
+        },
+        data: data,
+      }
+      const res = await axios(config)
+      console.log(res)
+
+      setGuessedUsers([])
+      toast.custom(
+        (t) => (
+          <div
+            className={`${
+              t.visible ? 'animate-enter' : 'animate-leave'
+            } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+          >
+            <div className='flex-1 w-0 p-4'>
+              <div className='flex items-center'>
+                <div className='text-2xl'>🎉</div>
+                <div className='flex flex-col flex-1  ml-3 gap-2'>
+                  <p className='text-sm font-medium'>
+                    Successfully minted drawing!
+                  </p>
+
+                  <div className='flex gap-2'>
+                    <div className='w-full'>
+                      <a
+                        href={`https://opensea.io/assets/matic/0x03e055692e77e56abf7f5570d9c64c194ba15616/${res.data.data.tokenId}`}
+                        target='_blank'
+                        className='btn btn-sm btn-block btn-outline border-gray-300 text-gray-500 hover:bg-violet-500 hover:border-violet-500'
+                      >
+                        OpenSea
+                      </a>
+                    </div>
+                    <div className='w-full'>
+                      <a
+                        href={`https://polygonscan.com/tx/${res.data.data.transactionHash}`}
+                        target='_blank'
+                        className='btn btn-sm btn-block btn-outline border-gray-300 text-gray-500 hover:bg-violet-500 hover:border-violet-500'
+                      >
+                        PolygonScan
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className='flex border-l border-gray-200'>
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                className='w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-violet-600'
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        ),
+        { duration: 15000 }
+      )
     } catch (error) {
       console.error(error)
 
@@ -278,9 +408,105 @@ const Home = () => {
       }
     }
 
+    setIsContractMint(true)
     setIsMining(false)
   }
 
+  const mintDrawing = async () => {
+    try {
+      if (!address) {
+        toast('Connect wallet to continue.', {
+          icon: '🦊',
+        })
+
+        return
+      }
+      setIsFreeMint(false)
+      setIsMining(true)
+
+      const tokenUri = await pinToIPFS()
+      const txResponse = await mintibblContract.mintDrawing(tokenUri)
+      const res = await txResponse.wait()
+      console.log(res)
+
+      setGuessedUsers([])
+      toast.custom(
+        (t) => (
+          <div
+            className={`${
+              t.visible ? 'animate-enter' : 'animate-leave'
+            } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+          >
+            <div className='flex-1 w-0 p-4'>
+              <div className='flex items-center'>
+                <div className='text-2xl'>🎉</div>
+                <div className='flex flex-col flex-1  ml-3 gap-2'>
+                  <p className='text-sm font-medium'>
+                    Successfully minted drawing!
+                  </p>
+
+                  <div className='flex gap-2'>
+                    <div className='w-full'>
+                      <a
+                        href={`https://testnets.opensea.io/assets/mumbai/0x0d05f5186422e07aa1981f52bcb3d5043dbc4e45/${res.transactionIndex}`}
+                        target='_blank'
+                        className='btn btn-sm btn-block btn-outline border-gray-300 text-gray-500 hover:bg-violet-500 hover:border-violet-500'
+                      >
+                        OpenSea
+                      </a>
+                    </div>
+                    <div className='w-full'>
+                      <a
+                        href={`https://mumbai.polygonscan.com/tx/${res.transactionHash}`}
+                        target='_blank'
+                        className='btn btn-sm btn-block btn-outline border-gray-300 text-gray-500 hover:bg-violet-500 hover:border-violet-500'
+                      >
+                        PolygonScan
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className='flex border-l border-gray-200'>
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                className='w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-violet-600'
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        ),
+        { duration: 15000 }
+      )
+    } catch (error) {
+      console.error(error)
+
+      if (error.code == 4001) {
+        toast.error(error.message)
+      } else {
+        toast.error('Something went wrong.')
+      }
+    }
+
+    setIsFreeMint(true)
+    setIsMining(false)
+  }
+
+  const dataURLtoFile = (dataURL, fileName) => {
+    let arr = dataURL.split(','),
+      mime = arr[0].match(/:(.*?);/)[1],
+      bstr = atob(arr[1]),
+      n = bstr.length,
+      u8arr = new Uint8Array(n)
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n)
+    }
+    return new File([u8arr], fileName, { type: mime })
+  }
+
+  // Overlay
   const renderNewRound = () => {
     return <div>Round {round}</div>
   }
@@ -357,7 +583,7 @@ const Home = () => {
         ) : (
           <Join
             address={address}
-            name={ensName ? ensName : name}
+            name={name}
             setName={setName}
             createRoom={createRoom}
             joinRoom={joinRoom}
@@ -420,7 +646,7 @@ const Home = () => {
                         size={40}
                       />
 
-                      <div className='flex flex-col'>
+                      <div className='flex flex-col text-sm'>
                         <div
                           className={
                             user.id === socket.id ? 'text-blue-500' : ''
@@ -428,10 +654,14 @@ const Home = () => {
                         >
                           {user.name} {user.id === socket.id && '(You)'}
                         </div>
-                        <div className='p-1 bg-rose-50 rounded text-gray-500 text-2xs font-mono'>
-                          {shortenAddress(user.address)}
+                        <div>
+                          <span className='bg-violet-200 rounded text-gray-500 text-2xs font-mono px-1 py-0.5'>
+                            {user.address
+                              ? shortenAddress(user.address)
+                              : 'Not Connected'}
+                          </span>
                         </div>
-                        <div className='text-sm'>Points: {user.points}</div>
+                        <div className='text-xs'>Points: {user.points}</div>
                       </div>
                     </div>
                   )
@@ -461,20 +691,56 @@ const Home = () => {
 
             <div className='flex flex-col w-full h-[600px] border gap-4 p-2'>
               {guessedUsers[0]?.id === socket.id && (
-                <div className='flex flex-col items-center h-[200px] gap-2'>
-                  <img
-                    className='border-2 border-black h-32 w-32'
-                    src={previousDrawing}
-                    alt='Drawing'
-                  />
+                <div className='flex flex-col h-[200px] gap-2'>
+                  <div className='flex flex-row items-center gap-2'>
+                    <img
+                      className='border-2 border-black h-32 w-32'
+                      src={previousDrawing}
+                      alt={previousWord}
+                    />
 
-                  <button
-                    className='btn btn-block bg-amber-500 border border-amber-500 px-16'
-                    onClick={mintDrawing}
-                    disabled={isMining}
-                  >
-                    {isMining ? 'Minting...' : 'Mint'}
-                  </button>
+                    <div className='flex flex-col text-xs gap-2'>
+                      <div>
+                        Word:{' '}
+                        <span className='font-medium'>{previousWord}</span>
+                      </div>
+                      <div>
+                        Artist:{' '}
+                        <span className='font-medium'>
+                          {previousDrawer.address
+                            ? shortenAddress(previousDrawer.address)
+                            : 'Not Connected'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className='flex flex-row gap-2'>
+                    <div
+                      className={`w-full ${isFreeMint ? 'block' : 'hidden'}`}
+                    >
+                      <button
+                        className='btn btn-block bg-violet-500 border border-violet-500 hover:bg-violet-500  hover:border-violet-500'
+                        onClick={freeMintDrawing}
+                        disabled={isMining}
+                      >
+                        {isMining ? <Orbit /> : 'Free Mint'}
+                      </button>
+                    </div>
+                    <div
+                      className={`w-full ${
+                        isContractMint ? 'block' : 'hidden'
+                      }`}
+                    >
+                      <button
+                        className='btn btn-block bg-gray-500 border border-gray-500 hover:bg-gray-500  hover:border-gray-500'
+                        onClick={mintDrawing}
+                        disabled={isMining}
+                      >
+                        {isMining ? <Orbit /> : 'Mint'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 
