@@ -16,11 +16,12 @@ const DrawingBoard = ({ socket, canvas, color }) => {
 
   return (
     <div
-      className='cursor-pointer border'
+      className='cursor-pointer border border-black rounded-lg'
       onMouseUp={saveCanvas}
       onTouchEnd={saveCanvas}
     >
       <CanvasDraw
+        className='rounded-lg'
         ref={canvas}
         hideGrid={true}
         lazyRadius={1}

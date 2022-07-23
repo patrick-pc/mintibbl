@@ -9,7 +9,7 @@ const Lobby = ({
   isGameHost,
 }) => {
   return (
-    <div className='flex justify-center container overflow-hidden gap-8 mx-auto'>
+    <div className='flex flex-col md:flex-row items-center md:items-start justify-center container overflow-hidden gap-8 mx-auto'>
       <div className='flex flex-col justify-center border border-black rounded-2xl w-96 gap-8 p-8'>
         <div>
           <label className='label'>
@@ -62,7 +62,7 @@ const Lobby = ({
           <button>copy</button>
         </div> */}
 
-        <div className='flex flex-wrap items-center w-96 gap-4'>
+        <div className='flex flex-wrap items-center text-sm w-96 gap-4'>
           {users?.map((user) => {
             return (
               <div className='flex flex-col items-center gap-4' key={user.id}>

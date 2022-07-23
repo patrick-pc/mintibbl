@@ -192,11 +192,6 @@ const Home = () => {
       canvas.current.clear()
     })
 
-    // socket.on('guessed_correctly', (guessedUsers) => {
-    //   // setGuessedUsers(guessedUsers)
-    //   console.log(guessedUsers)
-    // })
-
     socket.on('timer', (timer) => {
       setDrawTime(timer)
     })
@@ -517,7 +512,7 @@ const Home = () => {
         return (
           <button
             key={index}
-            className='btn btn-outline btn-xs'
+            className='btn btn-outline btn-sm text-white hover:bg-transparent hover:border-violet-500 hover:text-violet-500'
             onClick={() => {
               socket.emit('word_is', word)
               setWords([])
@@ -591,7 +586,7 @@ const Home = () => {
         )
       ) : (
         <div className='flex flex-col container overflow-hidden gap-4 mx-auto'>
-          <div className='flex items-center justify-between border p-2'>
+          <div className='flex items-center justify-between border border-black rounded-lg p-2'>
             <div className='text-lg font-medium'>
               Round {round} of {totalRounds}
             </div>
@@ -632,7 +627,7 @@ const Home = () => {
           </div>
 
           <div className='flex flex-col md:flex-row justify-center w-full gap-4 mb-4 mx-auto'>
-            <div className='flex flex-col w-full h-[600px] border gap-4 p-2'>
+            <div className='flex flex-col w-full h-[600px] border border-black rounded-lg gap-4 p-2'>
               {users &&
                 users.map((user) => {
                   return (
@@ -669,12 +664,12 @@ const Home = () => {
             </div>
 
             <div
-              className={`relative ${
+              className={`relative text-white rounded-lg ${
                 drawer.id !== socket.id && 'pointer-events-none'
               }`}
             >
               <div
-                className={`absolute h-full w-full top-0 left-0 bg-black opacity-10 z-10 ${
+                className={`absolute h-full w-full top-0 left-0 bg-black rounded-lg opacity-80 z-10 ${
                   canvasStatus !== 'drawing' ? 'block' : 'hidden'
                 }`}
               ></div>
@@ -689,7 +684,7 @@ const Home = () => {
               <DrawingBoard socket={socket} canvas={canvas} color={color} />
             </div>
 
-            <div className='flex flex-col w-full h-[600px] border gap-4 p-2'>
+            <div className='flex flex-col w-full h-[600px] border border-black rounded-lg gap-4 p-2'>
               {guessedUsers[0]?.id === socket.id && (
                 <div className='flex flex-col h-[200px] gap-2'>
                   <div className='flex flex-row items-center gap-2'>
@@ -769,7 +764,7 @@ const Home = () => {
                 </div>
                 <div>
                   <input
-                    className='input input-bordered w-full'
+                    className='input input-bordered border-black w-full focus:outline-none'
                     type='text'
                     placeholder='Type your guess here...'
                     value={message}
