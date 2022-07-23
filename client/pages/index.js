@@ -219,6 +219,9 @@ const Home = () => {
     })
 
     socket.on('game_over', (room) => {
+      const timeOut = 10000
+      if (room.users.length === 1) timeOut = 1000
+
       setCanvasStatus('game_over')
 
       setTimeout(() => {
@@ -233,7 +236,7 @@ const Home = () => {
         setGuessedUsers([])
         setMessages([])
         setMessage('')
-      }, 10000)
+      }, timeOut)
     })
   }, [])
 
