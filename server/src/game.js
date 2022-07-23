@@ -1,4 +1,8 @@
-const { nftWords, commonWords, difficultWords } = require('./words')
+const {
+  nft_words,
+  letter_a_to_letter_m_words,
+  letter_n_to_letter_z_words,
+} = require('./words')
 const rooms = []
 const publicRooms = [1]
 
@@ -52,10 +56,12 @@ const deleteRoom = (roomId) => {
 
 const getRandomWords = () => {
   const randomWords = [
-    nftWords[Math.floor(Math.random() * nftWords.length)].toLowerCase(),
-    commonWords[Math.floor(Math.random() * commonWords.length)].toLowerCase(),
-    difficultWords[
-      Math.floor(Math.random() * difficultWords.length)
+    nft_words[Math.floor(Math.random() * nft_words.length)].toLowerCase(),
+    letter_a_to_letter_m_words[
+      Math.floor(Math.random() * letter_a_to_letter_m_words.length)
+    ].toLowerCase(),
+    letter_n_to_letter_z_words[
+      Math.floor(Math.random() * letter_n_to_letter_z_words.length)
     ].toLowerCase(),
   ]
 
