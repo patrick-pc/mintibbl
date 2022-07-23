@@ -14,6 +14,7 @@ const Join = ({ address, name, setName, joinRoom, createRoom }) => {
                 placeholder='Enter your name'
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                maxLength={20}
               />
               <div className='card-action w-full'>
                 <button
@@ -39,7 +40,7 @@ const Join = ({ address, name, setName, joinRoom, createRoom }) => {
           <h1 className='bg-clip-text bg-gradient-to-b from-gray-900 via-purple-900 to-violet-600 text-transparent text-6xl font-bold'>
             Draw some cool sh*t, laugh while guessing, and make them NFTs!
           </h1>
-          <div className='text-gray-500 text-sm'>Mint is free!</div>
+          <div className='text-gray-500 text-sm'>It's free, even gas!</div>
         </div>
       </div>
     </div>
