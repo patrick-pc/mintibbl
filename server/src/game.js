@@ -6,14 +6,14 @@ const createRoom = (roomId, user) => {
   const room = {
     id: roomId,
     users: [user],
-    // round: 1,
-    // totalRounds: 3,
-    // drawTime: 80,
-    // drawerIndex: 0,
-    // drawer: '',
-    // selectedWord: '',
-    // drawnUsers: [],
-    // guessedUsers: [],
+    round: 1,
+    totalRounds: 3,
+    drawTime: 80,
+    drawerIndex: 0,
+    drawer: '',
+    selectedWord: '',
+    drawnUsers: [],
+    guessedUsers: [],
   }
   rooms.push(room)
 }
@@ -46,7 +46,7 @@ const leaveRoom = (socketId) => {
 }
 
 const deleteRoom = (roomId) => {
-  const index = rooms.findIndex((room) => room.id === roomId)
+  const index = rooms.findIndex((room) => room.id == roomId)
   if (index !== -1) rooms.splice(index, 1)[0]
 }
 
@@ -71,9 +71,6 @@ const chooseDrawer = (room) => {
 const resetDrawingState = (room) => {
   room.drawerIndex = 0
   room.drawer = getUsers(room.id)[room.drawerIndex]
-  room.drawnUsers = []
-  room.guessedUsers = []
-  room.selectedWord = ''
 }
 
 const resetUserPoints = (room) => {

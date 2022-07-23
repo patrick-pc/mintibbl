@@ -33,12 +33,13 @@ const {
 let interval
 
 io.on('connection', (socket) => {
-  socket.on('create_room', (address, name) => {
+  socket.on('create_room', (address, ensName, name) => {
     // Generate random id
     const randomRoomId = Math.random().toString(36).slice(-6)
     const user = {
       id: socket.id,
       address: address,
+      ensName: ensName,
       name: name,
       points: 0,
     }
@@ -48,10 +49,11 @@ io.on('connection', (socket) => {
     io.to(randomRoomId).emit('room_data', getRoom(randomRoomId))
   })
 
-  socket.on('join_room', (roomId, address, name, callback) => {
+  socket.on('join_room', (roomId, address, ensName, name, callback) => {
     const user = {
       id: socket.id,
       address: address,
+      ensName: ensName,
       name: name,
       points: 0,
     }
@@ -63,7 +65,7 @@ io.on('connection', (socket) => {
     // Check if room exists
     if (getRoom(roomId)) {
       // If room is full, create new public room
-      if (getUsers(roomId).length >= 3) {
+      if (getUsers(roomId).length >= 6) {
         roomId += 1
         publicRooms.push(roomId)
         createRoom(roomId, user)
@@ -79,6 +81,22 @@ io.on('connection', (socket) => {
     callback(getRoom(roomId))
   })
 
+  socket.on('wallet_connected', (roomId, address, ensName, name) => {
+    const room = getRoom(roomId)
+
+    if (room) {
+      room.users.find((user) => {
+        if (user.id === socket.id) {
+          user.address = address
+          user.ensName = ensName
+          ensName ? (user.name = ensName) : (user.name = name)
+        }
+      })
+
+      io.to(roomId).emit('room_data', getRoom(roomId))
+    }
+  })
+
   socket.on('start_game', (totalRounds, drawTime) => {
     const room = getRoomFromSocketId(socket.id)
 
@@ -89,21 +107,16 @@ io.on('connection', (socket) => {
     room.totalRounds = totalRounds
     room.drawTime = drawTime
     room.words = getRandomWords()
+    room.drawnUsers = []
+    room.guessedUsers = []
+    room.selectedWord = ''
     resetDrawingState(room)
     resetUserPoints(room)
 
-    // io.to(room.id).emit('select_word', {
-    //   newRound: room.newRound,
-    //   round: room.round,
-    //   totalRounds: room.totalRounds,
-    //   drawer: room.drawer,
-    //   words: getRandomWords(),
-    // })
     io.to(room.id).emit('select_word', room)
   })
 
   socket.on('word_is', (word) => {
-    console.log('word_is')
     const room = getRoomFromSocketId(socket.id)
     room.selectedWord = word
     room.drawnUsers.push(room.drawer)
@@ -132,7 +145,9 @@ io.on('connection', (socket) => {
           room.newRound = false
         }
         io.to(room.id).emit('end_turn', room)
+        room.drawnUsers = []
         room.guessedUsers = []
+        room.selectedWord = ''
       }
       room.timer -= 1
     }, 1000)
@@ -157,7 +172,6 @@ io.on('connection', (socket) => {
         user.points += 100 // Total points
 
         // Notify the client
-        io.to(room.id).emit('guessed_correctly', room.guessedUsers)
         io.to(room.id).emit('message', {
           sender: user.name,
           content: 'guessed the word!',
@@ -183,6 +197,9 @@ io.on('connection', (socket) => {
           resetDrawingState(room)
 
           io.to(room.id).emit('end_turn', room)
+          room.drawnUsers = []
+          room.guessedUsers = []
+          room.selectedWord = ''
         }
 
         // If all users have guessed, choose next drawer
@@ -210,13 +227,6 @@ io.on('connection', (socket) => {
     room.words = getRandomWords()
     room.timer = room.drawTime
 
-    // io.to(room.id).emit('select_word', {
-    //   newRound: room.newRound,
-    //   round: room.round,
-    //   totalRounds: room.totalRounds,
-    //   drawer: room.drawer,
-    //   words: getRandomWords(),
-    // })
     io.to(room.id).emit('select_word', room)
   })
 
@@ -229,17 +239,29 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log(`${socket.id} disconnected.`)
     const { roomId, user } = leaveRoom(socket.id)
+    const room = getRoom(roomId)
 
-    if (roomId && user) {
-      // TODO: clearInterval
+    if (room && user) {
+      // End game if one user left
+      if (getUsers(roomId).length === 1) {
+        clearInterval(interval)
+        room.isGameOver = true
+        io.to(roomId).emit('game_over', room)
+      }
+
+      // End turn if drawer leaves
+      if (user.id === room.drawer.id) {
+        clearInterval(interval)
+        io.to(roomId).emit('end_turn', room)
+      }
+
       io.to(roomId).emit('message', {
         sender: user.name,
         content: 'left.',
         color: 'red',
       })
-      io.to(roomId).emit('room_data', getRoom(roomId))
+      io.to(roomId).emit('room_data', room)
 
-      // TODO: Delete public room if empty
       // Delete room if empty
       if (getUsers(roomId).length === 0) deleteRoom(roomId)
     }
