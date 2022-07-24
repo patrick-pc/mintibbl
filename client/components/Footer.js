@@ -9,7 +9,11 @@ const Footer = () => {
         >
           🐦 twitter
         </a>
-        <a href='#' target='_blank' className='opacity-75 hover:opacity-100'>
+        <a
+          href='https://discord.gg/w93daBSH'
+          target='_blank'
+          className='opacity-75 hover:opacity-100'
+        >
           👾 discord
         </a>
       </div>
