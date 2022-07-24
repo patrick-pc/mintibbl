@@ -21,7 +21,15 @@ import Lobby from '../components/Lobby'
 import Avatar from '../components/Avatar'
 import DrawingBoard from '../components/DrawingBoard'
 
-const socket = io.connect(process.env.NEXT_PUBLIC_SERVER_URL)
+const connectionConfig = {
+  forceNew: true,
+  autoConnect: true,
+  reconnection: true,
+  reconnectionAttempts: 'Infinity',
+  timeout: 10000,
+  transports: ['websocket'],
+}
+const socket = io.connect(process.env.NEXT_PUBLIC_SERVER_URL, connectionConfig)
 
 const Home = () => {
   const router = useRouter()
@@ -46,6 +54,7 @@ const Home = () => {
   const [name, setName] = useState('')
   const [isGameHost, setIsGameHost] = useState(false)
   const [isGameStarted, setIsGameStarted] = useState(false)
+  const [isConnected, setIsConnected] = useState(false)
 
   const [inLobby, setInLobby] = useState(false)
   const [round, setRound] = useState(1)
@@ -158,6 +167,10 @@ const Home = () => {
 
   // Game handler
   useEffect(() => {
+    socket.on('connect', function () {
+      setIsConnected(true)
+    })
+
     socket.on('select_word', (room) => {
       setIsGameStarted(true)
 
@@ -526,7 +539,7 @@ const Home = () => {
         )
       })
     } else {
-      return <div>{drawer.name} is choosing a word.</div>
+      return <div>{drawer.name} is choosing a word!</div>
     }
   }
 
@@ -566,6 +579,13 @@ const Home = () => {
     }
   }
 
+  if (!isConnected) {
+    return (
+      <div className='flex items-center justify-center h-96 w-full'>
+        <Orbit size={40} />
+      </div>
+    )
+  }
   return (
     <FadeIn>
       {!isGameStarted ? (
@@ -645,11 +665,7 @@ const Home = () => {
                       />
 
                       <div className='flex flex-col text-sm'>
-                        <div
-                          className={
-                            user.id === socket.id ? 'text-blue-500' : ''
-                          }
-                        >
+                        <div className='font-medium break-all'>
                           {user.name} {user.id === socket.id && '(You)'}
                         </div>
                         <div>
@@ -747,7 +763,7 @@ const Home = () => {
                   guessedUsers[0]?.id === socket.id ? 'h-[380px]' : 'h-full'
                 }`}
               >
-                <div className='flex flex-col overflow-y-auto'>
+                <div className='flex flex-col flex-wrap overflow-y-auto'>
                   {messages &&
                     messages.map((message, i) => {
                       return (
@@ -759,7 +775,7 @@ const Home = () => {
                             <span className='font-medium mr-2'>
                               {message.sender && message.sender}
                             </span>
-                            <span>{message.content}</span>
+                            <p className='break-all'>{message.content}</p>
                           </div>
                         </div>
                       )
@@ -775,6 +791,7 @@ const Home = () => {
                     onKeyPress={(event) => {
                       event.key === 'Enter' && sendMessage()
                     }}
+                    maxLength={30}
                   />
                 </div>
               </div>

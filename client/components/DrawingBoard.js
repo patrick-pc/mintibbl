@@ -28,6 +28,7 @@ const DrawingBoard = ({ socket, canvas, color }) => {
         brushColor={color}
         canvasWidth={600}
         canvasHeight={600}
+        backgroundColor='#fff'
       />
     </div>
   )

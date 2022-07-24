@@ -135,6 +135,7 @@ io.on('connection', (socket) => {
           // Check if the game is over
           if (room.round == room.totalRounds) {
             console.log('Game over!')
+            room.isGameStarted = false
             room.isGameOver = true
             io.to(room.id).emit('game_over', getRoom(room.id))
           }
@@ -186,6 +187,7 @@ io.on('connection', (socket) => {
           // Check if the game is over
           if (room.round == room.totalRounds) {
             console.log('Game over!')
+            room.isGameStarted = false
             room.isGameOver = true
             io.to(room.id).emit('game_over', getRoom(room.id))
 
@@ -245,6 +247,7 @@ io.on('connection', (socket) => {
       // End game if one user left
       if (getUsers(roomId).length === 1) {
         clearInterval(interval)
+        room.isGameStarted = false
         room.isGameOver = true
         io.to(roomId).emit('game_over', room)
       }

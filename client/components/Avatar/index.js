@@ -14,7 +14,7 @@ const Avatar = ({ name, address, size }) => {
 
   return ensAvatar ? (
     <div
-      className='bg-cover bg-center rounded-full'
+      className='flex-shrink-0 bg-cover bg-center rounded-full'
       style={{
         backgroundImage: `url(${ensAvatar})`,
         height: size,

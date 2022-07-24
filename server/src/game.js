@@ -81,7 +81,6 @@ const resetDrawingState = (room) => {
 
 const resetUserPoints = (room) => {
   getUsers(room.id).forEach((user) => {
-    console.log(user)
     user.points = 0
   })
 }
