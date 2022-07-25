@@ -23,8 +23,6 @@ import DrawingBoard from '../components/DrawingBoard'
 
 const connectionConfig = {
   forceNew: true,
-  autoConnect: true,
-  reconnection: true,
   reconnectionAttempts: 'Infinity',
   timeout: 10000,
   transports: ['websocket'],
@@ -738,7 +736,7 @@ const Home = () => {
                         onClick={freeMintDrawing}
                         disabled={isMining}
                       >
-                        {isMining ? <Orbit /> : 'Free Mint'}
+                        {isMining ? <Orbit /> : 'Gas-Free Mint'}
                       </button>
                     </div>
                     <div
@@ -763,7 +761,7 @@ const Home = () => {
                   guessedUsers[0]?.id === socket.id ? 'h-[380px]' : 'h-full'
                 }`}
               >
-                <div className='flex flex-col flex-wrap overflow-y-auto'>
+                <div className='flex flex-col overflow-y-auto'>
                   {messages &&
                     messages.map((message, i) => {
                       return (
@@ -775,7 +773,7 @@ const Home = () => {
                             <span className='font-medium mr-2'>
                               {message.sender && message.sender}
                             </span>
-                            <p className='break-all'>{message.content}</p>
+                            <span className='break-all'>{message.content}</span>
                           </div>
                         </div>
                       )
