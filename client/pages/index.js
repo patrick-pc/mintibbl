@@ -13,7 +13,6 @@ import generateName from 'sillyname'
 import toast from 'react-hot-toast'
 import FadeIn from 'react-fade-in'
 import { Orbit } from '@uiball/loaders'
-import { CompactPicker } from 'react-color'
 import { shortenAddress } from '../utils/shortenAddress'
 import { CONTRACT_ADDRESS, ABI } from '../constants'
 import Join from '../components/Join'
@@ -21,7 +20,6 @@ import Lobby from '../components/Lobby'
 import Avatar from '../components/Avatar'
 import DrawingBoard from '../components/DrawingBoard'
 import Options from '../components/Options'
-import { TbPencil, TbEraser, TbTrash } from 'react-icons/tb'
 
 const connectionConfig = {
   forceNew: true,
@@ -75,6 +73,7 @@ const Home = () => {
   const canvasRef = useRef(null)
   const [canvasStatus, setCanvasStatus] = useState('')
   const [color, setColor] = useState('#000000')
+  const [prevColor, setPrevColor] = useState('#000000')
   const [editOption, setEditOption] = useState('draw')
   const [isMining, setIsMining] = useState(false)
   const [isFreeMint, setIsFreeMint] = useState(true)
@@ -518,32 +517,21 @@ const Home = () => {
     return new File([u8arr], fileName, { type: mime })
   }
 
-  const updateColor = (value) => {
-    if (editOption === 'draw') {
-      setColor(
-        `rgba(${value.rgb.r},${value.rgb.g},${value.rgb.b},${value.rgb.a})`
-      )
-    } else {
-      setColor('rgba(255,255,255,255)')
-    }
-  }
-
   const handleColorChange = (value) => {
-    // console.log(e)
-    // setColor(e)
-
-    if (editOption === 'draw') {
-      setColor(
-        `rgba(${value.rgb.r},${value.rgb.g},${value.rgb.b},${value.rgb.a})`
-      )
-    } else {
-      setColor('rgba(255,255,255,255)')
-    }
+    setColor(
+      `rgba(${value.rgb.r},${value.rgb.g},${value.rgb.b},${value.rgb.a})`
+    )
+    setPrevColor(
+      `rgba(${value.rgb.r},${value.rgb.g},${value.rgb.b},${value.rgb.a})`
+    )
+    setEditOption('draw')
   }
   const handleDrawOption = () => {
+    if (color === 'rgba(255,255,255,255)') setColor(prevColor)
     setEditOption('draw')
   }
   const handleEraseOption = () => {
+    setColor('rgba(255,255,255,255)')
     setEditOption('erase')
   }
   const handleClear = () => {
@@ -553,17 +541,14 @@ const Home = () => {
   const options = [
     {
       name: 'draw',
-      icon: <TbPencil />,
       handler: handleDrawOption,
     },
     {
       name: 'erase',
-      icon: <TbEraser />,
       handler: handleEraseOption,
     },
     {
       name: 'clear',
-      icon: <TbTrash />,
       handler: handleClear,
     },
   ]
@@ -864,10 +849,7 @@ const Home = () => {
             </div>
           </div>
 
-          {/* <div className='flex items-center justify-center mb-16'> */}
-          {/* <CompactPicker color={color} onChangeComplete={updateColor} /> */}
           {selectedWord && drawer.id === socket.id && renderOptions()}
-          {/* </div> */}
         </div>
       )}
     </FadeIn>

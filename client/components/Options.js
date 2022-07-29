@@ -1,7 +1,17 @@
 import { CompactPicker } from 'react-color'
+import { TbPencil, TbEraser, TbTrash } from 'react-icons/tb'
 
 const Options = ({ options, editOption, color, handleColorChange }) => {
   const renderIcon = (e, index) => {
+    let icon = null
+    if (e.name === 'draw') {
+      icon = <TbPencil />
+    } else if (e.name === 'erase') {
+      icon = <TbEraser />
+    } else {
+      icon = <TbTrash />
+    }
+
     return (
       <button
         key={index}
@@ -10,7 +20,7 @@ const Options = ({ options, editOption, color, handleColorChange }) => {
         }`}
         onClick={e.handler}
       >
-        <span className='text-xl'>{e.icon}</span>
+        <div className='text-xl'>{icon}</div>
       </button>
     )
   }
