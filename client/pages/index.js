@@ -13,13 +13,15 @@ import generateName from 'sillyname'
 import toast from 'react-hot-toast'
 import FadeIn from 'react-fade-in'
 import { Orbit } from '@uiball/loaders'
-import { CirclePicker } from 'react-color'
+import { CompactPicker } from 'react-color'
 import { shortenAddress } from '../utils/shortenAddress'
 import { CONTRACT_ADDRESS, ABI } from '../constants'
 import Join from '../components/Join'
 import Lobby from '../components/Lobby'
 import Avatar from '../components/Avatar'
 import DrawingBoard from '../components/DrawingBoard'
+import Options from '../components/Options'
+import { TbPencil, TbEraser, TbTrash } from 'react-icons/tb'
 
 const connectionConfig = {
   forceNew: true,
@@ -70,18 +72,13 @@ const Home = () => {
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState([])
 
-  const canvas = useRef(null)
+  const canvasRef = useRef(null)
   const [canvasStatus, setCanvasStatus] = useState('')
   const [color, setColor] = useState('#000000')
+  const [editOption, setEditOption] = useState('draw')
   const [isMining, setIsMining] = useState(false)
   const [isFreeMint, setIsFreeMint] = useState(true)
   const [isContractMint, setIsContractMint] = useState(true)
-
-  const updateColor = (value) => {
-    setColor(
-      `rgba(${value.rgb.r},${value.rgb.g},${value.rgb.b},${value.rgb.a})`
-    )
-  }
 
   const createRoom = () => {
     if (roomId !== '') router.replace('/', undefined, { shallow: true })
@@ -200,7 +197,7 @@ const Home = () => {
       setCanvasStatus('drawing')
 
       setSelectedWord(word)
-      canvas.current.clear()
+      socket.emit('clear')
     })
 
     socket.on('timer', (timer) => {
@@ -216,7 +213,8 @@ const Home = () => {
         ]
       )
       setPreviousWord(room.selectedWord)
-      setPreviousDrawing(canvas.current.getDataURL())
+
+      setPreviousDrawing(canvasRef.current.toDataURL('image/svg'))
       setGuessedUsers(room.guessedUsers)
 
       if (room.isGameOver) return
@@ -298,11 +296,14 @@ const Home = () => {
       const metadata = JSON.stringify({
         description: `A mintibbl drawing by ${artist}`,
         external_url: '',
-        image: canvas.current.getDataURL(),
+        image: canvasRef.current.toDataURL('image/svg'),
         name: title,
         attributes: attributes,
       })
-      const img = dataURLtoFile(canvas.current.getDataURL(), 'image.png')
+      const img = dataURLtoFile(
+        canvasRef.current.toDataURL('image/svg'),
+        'image.png'
+      )
       const data = {
         metadata: metadata,
         image: img,
@@ -352,6 +353,8 @@ const Home = () => {
           'x-api-key': process.env.NEXT_PUBLIC_MINT_NFT_API_KEY,
         },
         data: data,
+        origin: 'https://mintibbl.fun/',
+        referer: 'https://mintnft.today/',
       }
       const res = await axios(config)
       console.log(res)
@@ -515,7 +518,67 @@ const Home = () => {
     return new File([u8arr], fileName, { type: mime })
   }
 
-  // Overlay
+  const updateColor = (value) => {
+    if (editOption === 'draw') {
+      setColor(
+        `rgba(${value.rgb.r},${value.rgb.g},${value.rgb.b},${value.rgb.a})`
+      )
+    } else {
+      setColor('rgba(255,255,255,255)')
+    }
+  }
+
+  const handleColorChange = (value) => {
+    // console.log(e)
+    // setColor(e)
+
+    if (editOption === 'draw') {
+      setColor(
+        `rgba(${value.rgb.r},${value.rgb.g},${value.rgb.b},${value.rgb.a})`
+      )
+    } else {
+      setColor('rgba(255,255,255,255)')
+    }
+  }
+  const handleDrawOption = () => {
+    setEditOption('draw')
+  }
+  const handleEraseOption = () => {
+    setEditOption('erase')
+  }
+  const handleClear = () => {
+    setEditOption('draw')
+    socket.emit('clear')
+  }
+  const options = [
+    {
+      name: 'draw',
+      icon: <TbPencil />,
+      handler: handleDrawOption,
+    },
+    {
+      name: 'erase',
+      icon: <TbEraser />,
+      handler: handleEraseOption,
+    },
+    {
+      name: 'clear',
+      icon: <TbTrash />,
+      handler: handleClear,
+    },
+  ]
+
+  const renderOptions = () => {
+    return (
+      <Options
+        options={options}
+        editOption={editOption}
+        color={color}
+        handleColorChange={handleColorChange}
+      />
+    )
+  }
+
   const renderNewRound = () => {
     return <div>Round {round}</div>
   }
@@ -607,7 +670,7 @@ const Home = () => {
         )
       ) : (
         <div className='flex flex-col container overflow-hidden gap-4 mx-auto'>
-          <div className='flex items-center justify-between border border-black rounded-lg p-2'>
+          <div className='flex items-center justify-between border border-black rounded-lg p-2 mx-4'>
             <div className='text-lg font-medium'>
               Round {round} of {totalRounds}
             </div>
@@ -647,8 +710,8 @@ const Home = () => {
             </div>
           </div>
 
-          <div className='flex flex-col md:flex-row justify-center w-full gap-4 mb-4 mx-auto'>
-            <div className='flex flex-col w-full h-[600px] border border-black rounded-lg gap-4 p-2'>
+          <div className='flex gap-4 mx-4 overflow-x-auto'>
+            <div className='flex flex-col w-full min-w-[200px] h-[600px] border border-black rounded-lg gap-4 p-2'>
               {users &&
                 users.map((user) => {
                   return (
@@ -681,7 +744,7 @@ const Home = () => {
             </div>
 
             <div
-              className={`relative text-white rounded-lg ${
+              className={`relative min-w-[350px] h-[350px] md:min-w-[600px] md:h-[600px] border border-black rounded-lg ${
                 drawer.id !== socket.id && 'pointer-events-none'
               }`}
             >
@@ -691,17 +754,22 @@ const Home = () => {
                 }`}
               ></div>
               <div
-                className={`absolute flex items-center justify-center h-full w-full gap-4 z-20 ${
+                className={`absolute flex items-center justify-center h-full w-full text-white gap-4 z-20 ${
                   canvasStatus !== 'drawing' ? 'block' : 'hidden'
                 }`}
               >
                 {renderCanvasStatus()}
               </div>
 
-              <DrawingBoard socket={socket} canvas={canvas} color={color} />
+              <DrawingBoard
+                socket={socket}
+                color={color}
+                canvasRef={canvasRef}
+                editOption={editOption}
+              />
             </div>
 
-            <div className='flex flex-col w-full h-[600px] border border-black rounded-lg gap-4 p-2'>
+            <div className='flex flex-col w-full min-w-[200px] h-[600px] border border-black rounded-lg gap-4 p-2'>
               {guessedUsers[0]?.id === socket.id && (
                 <div className='flex flex-col h-[200px] gap-2'>
                   <div className='flex flex-row items-center gap-2'>
@@ -796,9 +864,10 @@ const Home = () => {
             </div>
           </div>
 
-          <div className='flex items-center justify-center mb-16'>
-            <CirclePicker color={color} onChangeComplete={updateColor} />
-          </div>
+          {/* <div className='flex items-center justify-center mb-16'> */}
+          {/* <CompactPicker color={color} onChangeComplete={updateColor} /> */}
+          {selectedWord && drawer.id === socket.id && renderOptions()}
+          {/* </div> */}
         </div>
       )}
     </FadeIn>

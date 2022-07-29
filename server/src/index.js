@@ -5,10 +5,13 @@ const app = express()
 const server = http.createServer(app)
 const { instrument } = require('@socket.io/admin-ui')
 const io = require('socket.io')(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST'],
-  },
+  cors: [
+    {
+      origin: '*',
+      methods: ['GET', 'POST'],
+    },
+  ],
+  transports: ['websocket'],
 })
 instrument(io, {
   auth: false,
@@ -232,10 +235,14 @@ io.on('connection', (socket) => {
     io.to(room.id).emit('select_word', room)
   })
 
-  socket.on('draw', (data) => {
+  socket.on('drawing', (data) => {
     const room = getRoomFromSocketId(socket.id)
-    room.drawing = data
-    io.to(room.id).emit('draw', data)
+    io.to(room.id).emit('drawing', data)
+  })
+
+  socket.on('clear', () => {
+    const room = getRoomFromSocketId(socket.id)
+    io.to(room.id).emit('clear')
   })
 
   socket.on('disconnect', () => {

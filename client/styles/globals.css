@@ -7,4 +7,11 @@
   body {
     @apply bg-base-100 font-sans overflow-x-hidden h-screen w-full;
   }
+
+  .options > div > div {
+    box-shadow: none !important;
+  }
+  .options .flexbox-fix {
+    display: none !important;
+  }
 }
