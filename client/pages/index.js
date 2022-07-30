@@ -249,9 +249,10 @@ const Home = () => {
   }, [])
 
   // Mint drawing
-  const pinToIPFS = async () => {
+  const pinToIPFS = async (isFreeMint) => {
     try {
-      let artist = 'anonymous'
+      const utcStr = new Date().toUTCString()
+      let artist = 'Anonymous'
       let title = 'Mintibbl Drawing'
       let attributes = []
 
@@ -262,6 +263,7 @@ const Home = () => {
         artist = previousDrawer.address
       }
 
+      // Set metadata depending on free mint or contract mint
       if (isFreeMint) {
         title = `Mintibbl Drawing (Test) - ${previousWord}`
         attributes = [
@@ -278,7 +280,7 @@ const Home = () => {
             value: artist,
           },
         ]
-      } else if (isContractMint) {
+      } else {
         title = previousWord
         attributes = [
           {
@@ -293,7 +295,7 @@ const Home = () => {
       }
 
       const metadata = JSON.stringify({
-        description: `A mintibbl drawing by ${artist}`,
+        description: `A mintibbl drawing by ${artist} on ${utcStr}`,
         external_url: '',
         image: canvasRef.current.toDataURL('image/svg'),
         name: title,
@@ -336,7 +338,7 @@ const Home = () => {
       setIsContractMint(false)
       setIsMining(true)
 
-      const tokenUri = await pinToIPFS()
+      const tokenUri = await pinToIPFS(true)
       const data = JSON.stringify({
         wallet: address,
         type: 'ERC721',
@@ -368,7 +370,7 @@ const Home = () => {
           >
             <div className='flex-1 w-0 p-4'>
               <div className='flex items-center'>
-                <div className='text-2xl'>🎉</div>
+                <div className='text-2xl'>✨</div>
                 <div className='flex flex-col flex-1  ml-3 gap-2'>
                   <p className='text-sm font-medium'>
                     Successfully minted drawing!
@@ -435,7 +437,7 @@ const Home = () => {
       setIsFreeMint(false)
       setIsMining(true)
 
-      const tokenUri = await pinToIPFS()
+      const tokenUri = await pinToIPFS(false)
       const txResponse = await mintibblContract.mintDrawing(tokenUri)
       const res = await txResponse.wait()
       console.log(res)
@@ -450,7 +452,7 @@ const Home = () => {
           >
             <div className='flex-1 w-0 p-4'>
               <div className='flex items-center'>
-                <div className='text-2xl'>🎉</div>
+                <div className='text-2xl'>✨</div>
                 <div className='flex flex-col flex-1  ml-3 gap-2'>
                   <p className='text-sm font-medium'>
                     Successfully minted drawing!
@@ -696,7 +698,7 @@ const Home = () => {
           </div>
 
           <div className='flex gap-4 mx-4 overflow-x-auto'>
-            <div className='flex flex-col w-full min-w-[200px] h-[600px] border border-black rounded-lg gap-4 p-2'>
+            <div className='flex flex-col w-full min-w-[300px] h-[600px] border border-black rounded-lg gap-4 p-2'>
               {users &&
                 users.map((user) => {
                   return (
@@ -754,7 +756,7 @@ const Home = () => {
               />
             </div>
 
-            <div className='flex flex-col w-full min-w-[200px] h-[600px] border border-black rounded-lg gap-4 p-2'>
+            <div className='flex flex-col w-full min-w-[300px] h-[600px] border border-black rounded-lg gap-4 p-2'>
               {guessedUsers[0]?.id === socket.id && (
                 <div className='flex flex-col h-[200px] gap-2'>
                   <div className='flex flex-row items-center gap-2'>
