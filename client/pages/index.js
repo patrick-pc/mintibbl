@@ -57,7 +57,7 @@ const Home = () => {
   const [inLobby, setInLobby] = useState(false)
   const [round, setRound] = useState(1)
   const [totalRounds, setTotalRounds] = useState(3)
-  const [drawTime, setDrawTime] = useState(80)
+  const [drawTime, setDrawTime] = useState(10)
   const [drawer, setDrawer] = useState('')
   const [words, setWords] = useState([])
   const [selectedWord, setSelectedWord] = useState('')
@@ -108,6 +108,7 @@ const Home = () => {
           setSelectedWord(room.selectedWord)
           setDrawer(room.drawer)
           setGuessedUsers(room.guessedUsers)
+          setCanvasStatus('drawing')
         } else {
           setInLobby(true)
         }
@@ -165,6 +166,10 @@ const Home = () => {
       setIsConnected(true)
     })
 
+    socket.on('disconnect', function () {
+      console.log('disconnected')
+    })
+
     socket.on('select_word', (room) => {
       setIsGameStarted(true)
 
@@ -212,7 +217,6 @@ const Home = () => {
         ]
       )
       setPreviousWord(room.selectedWord)
-
       setPreviousDrawing(canvasRef.current.toDataURL('image/svg'))
       setGuessedUsers(room.guessedUsers)
 
@@ -222,11 +226,14 @@ const Home = () => {
       setUsers(room.users)
 
       setTimeout(() => {
-        socket.emit('start_turn')
+        if (room.drawer.id === socket.id) socket.emit('start_turn') // Prevent emit duplicate
       }, 3000)
     })
 
     socket.on('game_over', (room) => {
+      console.log(room)
+      console.log(Math.max(...room.users.map((user) => user.points)))
+
       const timeOut = 10000
       if (room.users.length === 1) timeOut = 1000
 
@@ -252,7 +259,7 @@ const Home = () => {
   const pinToIPFS = async (isFreeMint) => {
     try {
       const utcStr = new Date().toUTCString()
-      let artist = 'Anonymous'
+      let artist = 'anonymous'
       let title = 'Mintibbl Drawing'
       let attributes = []
 
@@ -595,7 +602,7 @@ const Home = () => {
     return (
       <div className='flex flex-col gap-2'>
         <div>
-          The word was: <span className='font-bold'>{selectedWord}</span>.
+          The word was: <span className='font-bold'>{selectedWord}</span>
         </div>
         {guessedUsers.map((user) => {
           return (
@@ -627,13 +634,13 @@ const Home = () => {
     }
   }
 
-  if (!isConnected) {
-    return (
-      <div className='flex items-center justify-center h-96 w-full'>
-        <Orbit size={40} />
-      </div>
-    )
-  }
+  // if (!isConnected) {
+  //   return (
+  //     <div className='flex items-center justify-center h-96 w-full'>
+  //       <Orbit size={40} />
+  //     </div>
+  //   )
+  // }
   return (
     <FadeIn>
       {!isGameStarted ? (
@@ -703,7 +710,7 @@ const Home = () => {
                 users.map((user) => {
                   return (
                     <div
-                      className='flex flex-row items-center border-b p-4 gap-4'
+                      className='flex flex-row items-center border-b p-2 gap-4'
                       key={user.id}
                     >
                       <Avatar

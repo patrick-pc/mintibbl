@@ -113,6 +113,7 @@ io.on('connection', (socket) => {
     room.drawnUsers = []
     room.guessedUsers = []
     room.selectedWord = ''
+    room.isDrawing = true
     resetDrawingState(room)
     resetUserPoints(room)
 
@@ -122,7 +123,6 @@ io.on('connection', (socket) => {
   socket.on('word_is', (word) => {
     const room = getRoomFromSocketId(socket.id)
     room.selectedWord = word
-    room.drawnUsers.push(room.drawer)
 
     io.to(room.id).emit('word_selected', room.selectedWord)
 
@@ -131,10 +131,14 @@ io.on('connection', (socket) => {
     interval = setInterval(() => {
       io.to(room.id).emit('timer', room.timer)
       if (room.timer === 0) {
+        console.log('timer is 0')
         clearInterval(interval)
         chooseDrawer(room)
+
         // If all users have drawn, start next round
         if (room.drawnUsers.length === getUsers(room.id).length) {
+          console.log('timer: end_round')
+
           // Check if the game is over
           if (room.round == room.totalRounds) {
             console.log('Game over!')
@@ -145,13 +149,19 @@ io.on('connection', (socket) => {
           room.round++
           room.newRound = true
           resetDrawingState(room)
+
+          io.to(room.id).emit('end_turn', room)
+          room.drawnUsers = []
+          room.selectedWord = ''
         } else {
+          console.log('timer: end_turn')
+
           room.newRound = false
+          io.to(room.id).emit('end_turn', room)
         }
-        io.to(room.id).emit('end_turn', room)
-        room.drawnUsers = []
+        room.timer = room.drawTime
         room.guessedUsers = []
-        room.selectedWord = ''
+        room.isDrawing = false
       }
       room.timer -= 1
     }, 1000)
@@ -166,14 +176,34 @@ io.on('connection', (socket) => {
     // Correct guess
     if (message.toLowerCase() === room.selectedWord.toLowerCase()) {
       // If not drawer and haven't guessed yet, emit message
-      if (user.id !== room.drawer.id) {
+      if (
+        room.isDrawing &&
+        user.id !== room.drawer.id &&
+        !room.guessedUsers.find((guessedUser) => guessedUser.id === user.id)
+      ) {
+        // TODO: Make point system more dynamic
+        let points = 0
+        if (room.guessedUsers.length === 0) {
+          points = 400
+        } else if (room.guessedUsers.length === 1) {
+          points = 350
+        } else if (room.guessedUsers.length === 2) {
+          points = 300
+        } else if (room.guessedUsers.length === 3) {
+          points = 250
+        } else if (room.guessedUsers.length === 4) {
+          points = 200
+        } else if (room.guessedUsers.length === 5) {
+          points = 150
+        }
+
         room.guessedUsers.push({
           id: user.id,
           address: user.address,
           name: user.name,
-          points: 100, // Points for this turn
+          points: points, // Points for this turn
         })
-        user.points += 100 // Total points
+        user.points += points // Total points
 
         // Notify the client
         io.to(room.id).emit('message', {
@@ -183,37 +213,42 @@ io.on('connection', (socket) => {
         })
         console.log(`${user.name} guessed the word!`)
 
-        // If all users have drawn, start next round
-        if (room.drawnUsers.length === getUsers(room.id).length) {
-          clearInterval(interval)
-
-          // Check if the game is over
-          if (room.round == room.totalRounds) {
-            console.log('Game over!')
-            room.isGameStarted = false
-            room.isGameOver = true
-            io.to(room.id).emit('game_over', getRoom(room.id))
-
-            callback()
-          }
-
-          room.round++
-          room.newRound = true
-          resetDrawingState(room)
-
-          io.to(room.id).emit('end_turn', room)
-          room.drawnUsers = []
-          room.guessedUsers = []
-          room.selectedWord = ''
-        }
-
         // If all users have guessed, choose next drawer
         if (room.guessedUsers.length === getUsers(room.id).length - 1) {
+          console.log('all users have guessed')
           clearInterval(interval)
           chooseDrawer(room)
-          room.newRound = false
-          io.to(room.id).emit('end_turn', room)
+
+          // If all users have drawn, start next round
+          if (room.drawnUsers.length === getUsers(room.id).length) {
+            console.log('end_round')
+
+            // Check if the game is over
+            if (room.round == room.totalRounds) {
+              console.log('Game over!')
+              room.isGameStarted = false
+              room.isGameOver = true
+              io.to(room.id).emit('game_over', getRoom(room.id))
+
+              callback()
+            }
+
+            room.round++
+            room.newRound = true
+            resetDrawingState(room)
+
+            io.to(room.id).emit('end_turn', room)
+            room.drawnUsers = []
+            room.selectedWord = ''
+          } else {
+            console.log('end_turn')
+
+            room.newRound = false
+            io.to(room.id).emit('end_turn', room)
+          }
+          room.timer = room.drawTime
           room.guessedUsers = []
+          room.isDrawing = false
         }
       }
     } else {
@@ -228,9 +263,11 @@ io.on('connection', (socket) => {
   })
 
   socket.on('start_turn', () => {
+    console.log('start_turn')
+
     const room = getRoomFromSocketId(socket.id)
     room.words = getRandomWords()
-    room.timer = room.drawTime
+    room.isDrawing = true
 
     io.to(room.id).emit('select_word', room)
   })
@@ -262,7 +299,36 @@ io.on('connection', (socket) => {
       // End turn if drawer leaves
       if (user.id === room.drawer.id) {
         clearInterval(interval)
-        io.to(roomId).emit('end_turn', room)
+        chooseDrawer(room, socket.id)
+
+        // If all users have drawn, start next round
+        if (room.drawnUsers.length === getUsers(room.id).length) {
+          console.log('end_round')
+
+          // Check if the game is over
+          if (room.round == room.totalRounds) {
+            console.log('Game over!')
+            room.isGameStarted = false
+            room.isGameOver = true
+            io.to(room.id).emit('game_over', getRoom(room.id))
+          }
+
+          room.round++
+          room.newRound = true
+          resetDrawingState(room)
+
+          io.to(room.id).emit('end_turn', room)
+          room.drawnUsers = []
+          room.selectedWord = ''
+        } else {
+          console.log('end_turn')
+
+          room.newRound = false
+          io.to(room.id).emit('end_turn', room)
+        }
+        room.timer = room.drawTime
+        room.guessedUsers = []
+        room.isDrawing = false
       }
 
       io.to(roomId).emit('message', {

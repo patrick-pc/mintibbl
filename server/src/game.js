@@ -68,10 +68,25 @@ const getRandomWords = () => {
   return randomWords
 }
 
-const chooseDrawer = (room) => {
-  room.drawerIndex =
-    room.drawerIndex >= getUsers(room.id).length - 1 ? 0 : room.drawerIndex + 1
+const chooseDrawer = (room, socketId = '') => {
+  if (socketId) {
+    const drawnUserIndex = room.drawnUsers.findIndex(
+      (user) => user.id === socketId
+    )
+    const guessedUserIndex = room.guessedUsers.findIndex(
+      (user) => user.id === socketId
+    )
+    if (drawnUserIndex !== -1) room.drawnUsers.splice(drawnUserIndex, 1)[0]
+    if (guessedUserIndex !== -1)
+      room.guessedUsers.splice(guessedUserIndex, 1)[0]
+  } else {
+    room.drawerIndex =
+      room.drawerIndex >= getUsers(room.id).length - 1
+        ? 0
+        : room.drawerIndex + 1
+  }
   room.drawer = getUsers(room.id)[room.drawerIndex]
+  room.drawnUsers.push(room.drawer)
 }
 
 const resetDrawingState = (room) => {
