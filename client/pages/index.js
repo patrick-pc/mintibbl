@@ -57,7 +57,7 @@ const Home = () => {
   const [inLobby, setInLobby] = useState(false)
   const [round, setRound] = useState(1)
   const [totalRounds, setTotalRounds] = useState(3)
-  const [drawTime, setDrawTime] = useState(10)
+  const [drawTime, setDrawTime] = useState(15)
   const [drawer, setDrawer] = useState('')
   const [words, setWords] = useState([])
   const [selectedWord, setSelectedWord] = useState('')
@@ -202,10 +202,17 @@ const Home = () => {
 
       setSelectedWord(word)
       socket.emit('clear')
+      playAudio('startTurn.mp3')
     })
 
     socket.on('timer', (timer) => {
       setDrawTime(timer)
+
+      if (timer <= 10) playAudio('tick.ogg')
+    })
+
+    socket.on('guessed_correctly', () => {
+      playAudio('guessed.mp3')
     })
 
     socket.on('end_turn', (room) => {
@@ -238,6 +245,7 @@ const Home = () => {
       if (room.users.length === 1) timeOut = 1000
 
       setCanvasStatus('game_over')
+      playAudio('winner.mp3')
 
       setTimeout(() => {
         setIsGameStarted(false)
@@ -632,6 +640,12 @@ const Home = () => {
       default:
         break
     }
+  }
+
+  //  Sound FX
+  const playAudio = (fileName) => {
+    const audio = new Audio('/sounds/' + fileName)
+    audio.play()
   }
 
   // if (!isConnected) {

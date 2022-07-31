@@ -211,6 +211,7 @@ io.on('connection', (socket) => {
           content: 'guessed the word!',
           color: 'green',
         })
+        io.to(room.id).emit('guessed_correctly') // For sound fx
         console.log(`${user.name} guessed the word!`)
 
         // If all users have guessed, choose next drawer
