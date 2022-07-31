@@ -57,7 +57,7 @@ const Home = () => {
   const [inLobby, setInLobby] = useState(false)
   const [round, setRound] = useState(1)
   const [totalRounds, setTotalRounds] = useState(3)
-  const [drawTime, setDrawTime] = useState(15)
+  const [drawTime, setDrawTime] = useState(80)
   const [drawer, setDrawer] = useState('')
   const [words, setWords] = useState([])
   const [selectedWord, setSelectedWord] = useState('')
@@ -648,13 +648,13 @@ const Home = () => {
     audio.play()
   }
 
-  // if (!isConnected) {
-  //   return (
-  //     <div className='flex items-center justify-center h-96 w-full'>
-  //       <Orbit size={40} />
-  //     </div>
-  //   )
-  // }
+  if (!isConnected) {
+    return (
+      <div className='flex items-center justify-center h-96 w-full'>
+        <Orbit size={40} />
+      </div>
+    )
+  }
   return (
     <FadeIn>
       {!isGameStarted ? (
