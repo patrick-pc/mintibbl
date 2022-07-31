@@ -837,23 +837,35 @@ const Home = () => {
                   guessedUsers[0]?.id === socket.id ? 'h-[380px]' : 'h-full'
                 }`}
               >
-                <div className='flex flex-col overflow-y-auto'>
-                  {messages &&
-                    messages.map((message, i) => {
-                      return (
-                        <div
-                          className='flex gap-2 p-2 even:bg-gray-50 odd:bg-gray-100'
-                          key={i}
-                        >
-                          <div className='text-sm'>
-                            <span className='font-medium mr-2'>
-                              {message.sender && message.sender}
-                            </span>
-                            <span className='break-all'>{message.content}</span>
+                <div className='flex flex-col-reverse overflow-y-auto'>
+                  <div>
+                    {messages &&
+                      messages.map((message, i) => {
+                        return (
+                          <div
+                            className='flex gap-2 p-2 even:bg-gray-50 odd:bg-gray-100'
+                            key={i}
+                          >
+                            {message.color === 'black' ? (
+                              <p className='text-sm break-all'>
+                                <span className='font-medium'>
+                                  {message.sender && message.sender}:
+                                </span>{' '}
+                                {message.content}
+                              </p>
+                            ) : (
+                              <p
+                                className='text-sm break-all font-medium'
+                                style={{ color: message.color }}
+                              >
+                                {message.sender && message.sender}{' '}
+                                {message.content}
+                              </p>
+                            )}
                           </div>
-                        </div>
-                      )
-                    })}
+                        )
+                      })}
+                  </div>
                 </div>
                 <div>
                   <input

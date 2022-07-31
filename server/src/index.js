@@ -50,6 +50,11 @@ io.on('connection', (socket) => {
     createRoom(randomRoomId, user)
     socket.join(randomRoomId)
     io.to(randomRoomId).emit('room_data', getRoom(randomRoomId))
+    io.to(randomRoomId).emit('message', {
+      sender: user.name,
+      content: 'joined.',
+      color: '#22C55E',
+    })
   })
 
   socket.on('join_room', (roomId, address, ensName, name, callback) => {
@@ -81,6 +86,11 @@ io.on('connection', (socket) => {
     socket.join(roomId)
 
     io.to(roomId).emit('room_data', getRoom(roomId))
+    io.to(roomId).emit('message', {
+      sender: user.name,
+      content: 'joined.',
+      color: '#22C55E',
+    })
     callback(getRoom(roomId))
   })
 
@@ -125,6 +135,11 @@ io.on('connection', (socket) => {
     room.selectedWord = word
 
     io.to(room.id).emit('word_selected', room.selectedWord)
+    io.to(room.id).emit('message', {
+      sender: room.drawer.name,
+      content: 'is drawing now!',
+      color: '#8B5CF6',
+    })
 
     // Run timer
     room.timer = room.drawTime - 1
@@ -132,6 +147,13 @@ io.on('connection', (socket) => {
       io.to(room.id).emit('timer', room.timer)
       if (room.timer === 0) {
         console.log('timer is 0')
+
+        io.to(room.id).emit('message', {
+          sender: 'The word was ',
+          content: `"${room.selectedWord}"`,
+          color: '#22C55E',
+        })
+
         clearInterval(interval)
         chooseDrawer(room)
 
@@ -209,7 +231,7 @@ io.on('connection', (socket) => {
         io.to(room.id).emit('message', {
           sender: user.name,
           content: 'guessed the word!',
-          color: 'green',
+          color: '#22C55E',
         })
         io.to(room.id).emit('guessed_correctly') // For sound fx
         console.log(`${user.name} guessed the word!`)
@@ -217,6 +239,13 @@ io.on('connection', (socket) => {
         // If all users have guessed, choose next drawer
         if (room.guessedUsers.length === getUsers(room.id).length - 1) {
           console.log('all users have guessed')
+
+          io.to(room.id).emit('message', {
+            sender: 'The word was ',
+            content: `"${room.selectedWord}"`,
+            color: '#22C55E',
+          })
+
           clearInterval(interval)
           chooseDrawer(room)
 
@@ -335,7 +364,7 @@ io.on('connection', (socket) => {
       io.to(roomId).emit('message', {
         sender: user.name,
         content: 'left.',
-        color: 'red',
+        color: '#EF4444',
       })
       io.to(roomId).emit('room_data', room)
 
