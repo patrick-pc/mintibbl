@@ -14,6 +14,7 @@ import toast from 'react-hot-toast'
 import FadeIn from 'react-fade-in'
 import { Orbit } from '@uiball/loaders'
 import { shortenAddress } from '../utils/shortenAddress'
+import { copyToClipboard } from '../utils/copyToClipboard'
 import { CONTRACT_ADDRESS, ABI } from '../constants'
 import Join from '../components/Join'
 import Lobby from '../components/Lobby'
@@ -202,7 +203,7 @@ const Home = () => {
 
       setSelectedWord(word)
       socket.emit('clear')
-      playAudio('startTurn.mp3')
+      playAudio('wordSelected.mp3')
     })
 
     socket.on('timer', (timer) => {
@@ -582,43 +583,73 @@ const Home = () => {
   }
 
   const renderNewRound = () => {
-    return <div>Round {round}</div>
+    return <div className='text-xl text-center font-medium'>Round {round}</div>
   }
 
   const renderWordSelection = () => {
     if (drawer.id === socket.id) {
-      return words.map((word, index) => {
-        return (
-          <button
-            key={index}
-            className='btn btn-outline btn-sm text-white hover:bg-transparent hover:border-violet-500 hover:text-violet-500'
-            onClick={() => {
-              socket.emit('word_is', word)
-              setWords([])
-            }}
-          >
-            {word}
-          </button>
-        )
-      })
+      return (
+        <div className='flex flex-col gap-4'>
+          <div className='text-lg text-center font-medium'>Choose a word</div>
+          <div className='flex gap-4 text-black'>
+            <button
+              className='m-btn m-btn-primary m-btn-sm'
+              onClick={() => {
+                socket.emit('word_is', words[0])
+                setWords([])
+              }}
+            >
+              {words[0]}
+            </button>
+            <button
+              className='m-btn m-btn-secondary m-btn-sm'
+              onClick={() => {
+                socket.emit('word_is', words[1])
+                setWords([])
+              }}
+            >
+              {words[1]}
+            </button>
+            <button
+              className='m-btn m-btn-accent m-btn-sm'
+              onClick={() => {
+                socket.emit('word_is', words[2])
+                setWords([])
+              }}
+            >
+              {words[2]}
+            </button>
+          </div>
+        </div>
+      )
     } else {
-      return <div>{drawer.name} is choosing a word!</div>
+      return (
+        <div className='text-lg text-center font-medium'>
+          <span className='text-violet-500 font-bold'>{drawer.name}</span> is
+          choosing a word!
+        </div>
+      )
     }
   }
 
   const renderScoreboard = () => {
     return (
-      <div className='flex flex-col gap-2'>
-        <div>
-          The word was: <span className='font-bold'>{selectedWord}</span>
+      <div className='flex flex-col gap-4'>
+        <div className='text-lg text-center font-medium'>
+          The word was{' '}
+          <span className='text-violet-500 font-bold'>"{selectedWord}"</span>
         </div>
-        {guessedUsers.map((user) => {
-          return (
-            <div key={user.id}>
-              {user.name}: {user.points}
-            </div>
-          )
-        })}
+
+        <div className='flex flex-col gap-2'>
+          {guessedUsers.map((user) => {
+            return (
+              <div key={user.id}>
+                {user.name}:{' '}
+                <span className='text-lime-500'>{user.points}</span>
+              </div>
+            )
+          })}
+        </div>
       </div>
     )
   }
@@ -677,214 +708,229 @@ const Home = () => {
           />
         )
       ) : (
-        <div className='flex flex-col container overflow-hidden gap-4 mx-auto'>
-          <div className='flex items-center justify-between border border-black rounded-lg p-2 mx-4'>
-            <div className='text-lg font-medium'>
-              Round {round} of {totalRounds}
+        <div className='container mx-auto'>
+          <div className='flex flex-col gap-4'>
+            <div className='flex items-center justify-between m-border p-2 mx-4'>
+              <div className='text-lg font-medium'>
+                Round {round} of {totalRounds}
+              </div>
+
+              <div>
+                {selectedWord && (
+                  <div className='text-center text-3xl'>
+                    {drawer.id === socket.id ? (
+                      <span className='tracking-wide font-medium'>
+                        {selectedWord}
+                      </span>
+                    ) : (
+                      <span className='tracking-[.25em] font-light'>
+                        {selectedWord.replace(/\S/gi, '_')}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className='flex items-center justify-center gap-2'>
+                <span className='text-lg font-medium'>{drawTime}</span>
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  className='h-6 w-6'
+                  fill='none'
+                  viewBox='0 0 24 24'
+                  stroke='currentColor'
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
+                  />
+                </svg>
+              </div>
             </div>
 
-            <div>
-              {selectedWord && (
-                <div className='text-center text-3xl'>
-                  {drawer.id === socket.id ? (
-                    <span className='tracking-wide font-medium'>
-                      {selectedWord}
-                    </span>
-                  ) : (
-                    <span className='tracking-[.25em] font-light'>
-                      {selectedWord.replace(/\S/gi, '_')}
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
+            <div className='flex gap-4 mx-4 overflow-x-auto'>
+              <div className='flex flex-col w-full min-w-[300px] h-[600px] m-border gap-4 p-2'>
+                {users &&
+                  users.map((user) => {
+                    return (
+                      <div
+                        className='flex flex-row items-center border-b p-2 gap-4'
+                        key={user.id}
+                      >
+                        <Avatar
+                          name={user.name}
+                          address={user.address}
+                          size={40}
+                        />
 
-            <div className='flex items-center justify-center gap-2'>
-              <span className='text-lg font-medium'>{drawTime}</span>
-              <svg
-                xmlns='http://www.w3.org/2000/svg'
-                className='h-6 w-6'
-                fill='none'
-                viewBox='0 0 24 24'
-                stroke='currentColor'
-                strokeWidth={2}
+                        <div className='flex flex-col text-sm'>
+                          <div className='font-medium break-all'>
+                            {user.name} {user.id === socket.id && '(You)'}
+                          </div>
+
+                          <div>
+                            <span
+                              className={`bg-violet-200 rounded text-gray-500 text-2xs font-mono px-1 py-0.5 ${
+                                user.address && 'cursor-pointer'
+                              }`}
+                              onClick={() => {
+                                user.address &&
+                                  copyToClipboard(
+                                    user.address,
+                                    'Copied wallet address to clipboard!'
+                                  )
+                              }}
+                            >
+                              {user.address
+                                ? shortenAddress(user.address)
+                                : 'Not Connected'}
+                            </span>
+                          </div>
+
+                          <div className='text-xs'>Points: {user.points}</div>
+                        </div>
+                      </div>
+                    )
+                  })}
+              </div>
+
+              <div
+                className={`relative min-w-[350px] h-[350px] md:min-w-[600px] md:h-[600px] m-border ${
+                  drawer.id !== socket.id && 'pointer-events-none'
+                }`}
               >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
-                />
-              </svg>
-            </div>
-          </div>
+                <div
+                  className={`absolute h-full w-full top-0 left-0 bg-black opacity-80 z-10 ${
+                    canvasStatus !== 'drawing' ? 'block' : 'hidden'
+                  }`}
+                ></div>
+                <div
+                  className={`absolute flex items-center justify-center h-full w-full text-white gap-4 z-20 ${
+                    canvasStatus !== 'drawing' ? 'block' : 'hidden'
+                  }`}
+                >
+                  {renderCanvasStatus()}
+                </div>
 
-          <div className='flex gap-4 mx-4 overflow-x-auto'>
-            <div className='flex flex-col w-full min-w-[300px] h-[600px] border border-black rounded-lg gap-4 p-2'>
-              {users &&
-                users.map((user) => {
-                  return (
-                    <div
-                      className='flex flex-row items-center border-b p-2 gap-4'
-                      key={user.id}
-                    >
-                      <Avatar
-                        name={user.name}
-                        address={user.address}
-                        size={40}
+                <DrawingBoard
+                  socket={socket}
+                  color={color}
+                  canvasRef={canvasRef}
+                  editOption={editOption}
+                />
+              </div>
+
+              <div className='flex flex-col w-full min-w-[300px] h-[600px] m-border gap-4 p-2'>
+                {guessedUsers[0]?.id === socket.id && (
+                  <div className='flex flex-col h-[200px] gap-2'>
+                    <div className='flex flex-row items-center gap-2'>
+                      <img
+                        className='m-border h-32 w-32'
+                        src={previousDrawing}
+                        alt={previousWord}
                       />
 
-                      <div className='flex flex-col text-sm'>
-                        <div className='font-medium break-all'>
-                          {user.name} {user.id === socket.id && '(You)'}
+                      <div className='flex flex-col text-xs gap-2'>
+                        <div>
+                          Word:{' '}
+                          <span className='font-medium'>{previousWord}</span>
                         </div>
                         <div>
-                          <span className='bg-violet-200 rounded text-gray-500 text-2xs font-mono px-1 py-0.5'>
-                            {user.address
-                              ? shortenAddress(user.address)
+                          Artist:{' '}
+                          <span className='font-medium'>
+                            {previousDrawer.address
+                              ? shortenAddress(previousDrawer.address)
                               : 'Not Connected'}
                           </span>
                         </div>
-                        <div className='text-xs'>Points: {user.points}</div>
                       </div>
                     </div>
-                  )
-                })}
-            </div>
 
-            <div
-              className={`relative min-w-[350px] h-[350px] md:min-w-[600px] md:h-[600px] border border-black rounded-lg ${
-                drawer.id !== socket.id && 'pointer-events-none'
-              }`}
-            >
-              <div
-                className={`absolute h-full w-full top-0 left-0 bg-black rounded-lg opacity-80 z-10 ${
-                  canvasStatus !== 'drawing' ? 'block' : 'hidden'
-                }`}
-              ></div>
-              <div
-                className={`absolute flex items-center justify-center h-full w-full text-white gap-4 z-20 ${
-                  canvasStatus !== 'drawing' ? 'block' : 'hidden'
-                }`}
-              >
-                {renderCanvasStatus()}
-              </div>
-
-              <DrawingBoard
-                socket={socket}
-                color={color}
-                canvasRef={canvasRef}
-                editOption={editOption}
-              />
-            </div>
-
-            <div className='flex flex-col w-full min-w-[300px] h-[600px] border border-black rounded-lg gap-4 p-2'>
-              {guessedUsers[0]?.id === socket.id && (
-                <div className='flex flex-col h-[200px] gap-2'>
-                  <div className='flex flex-row items-center gap-2'>
-                    <img
-                      className='border-2 border-black h-32 w-32'
-                      src={previousDrawing}
-                      alt={previousWord}
-                    />
-
-                    <div className='flex flex-col text-xs gap-2'>
-                      <div>
-                        Word:{' '}
-                        <span className='font-medium'>{previousWord}</span>
+                    <div className='flex flex-row gap-2'>
+                      <div
+                        className={`w-full ${isFreeMint ? 'block' : 'hidden'}`}
+                      >
+                        <button
+                          className='m-btn m-btn-primary m-btn-sm btn-block'
+                          onClick={freeMintDrawing}
+                          disabled={isMining}
+                        >
+                          {isMining ? <Orbit /> : 'Gas-Free Mint'}
+                        </button>
                       </div>
-                      <div>
-                        Artist:{' '}
-                        <span className='font-medium'>
-                          {previousDrawer.address
-                            ? shortenAddress(previousDrawer.address)
-                            : 'Not Connected'}
-                        </span>
+                      <div
+                        className={`w-full ${
+                          isContractMint ? 'block' : 'hidden'
+                        }`}
+                      >
+                        <button
+                          className='m-btn m-btn-secondary m-btn-sm btn-block'
+                          onClick={mintDrawing}
+                          disabled={isMining}
+                        >
+                          {isMining ? <Orbit /> : 'Mint'}
+                        </button>
                       </div>
                     </div>
                   </div>
+                )}
 
-                  <div className='flex flex-row gap-2'>
-                    <div
-                      className={`w-full ${isFreeMint ? 'block' : 'hidden'}`}
-                    >
-                      <button
-                        className='btn btn-block bg-violet-500 border border-violet-500 hover:bg-violet-500  hover:border-violet-500'
-                        onClick={freeMintDrawing}
-                        disabled={isMining}
-                      >
-                        {isMining ? <Orbit /> : 'Gas-Free Mint'}
-                      </button>
-                    </div>
-                    <div
-                      className={`w-full ${
-                        isContractMint ? 'block' : 'hidden'
-                      }`}
-                    >
-                      <button
-                        className='btn btn-block bg-gray-500 border border-gray-500 hover:bg-gray-500  hover:border-gray-500'
-                        onClick={mintDrawing}
-                        disabled={isMining}
-                      >
-                        {isMining ? <Orbit /> : 'Mint'}
-                      </button>
+                <div
+                  className={`flex flex-col justify-between ${
+                    guessedUsers[0]?.id === socket.id ? 'h-[380px]' : 'h-full'
+                  }`}
+                >
+                  <div className='flex flex-col-reverse overflow-y-auto'>
+                    <div>
+                      {messages &&
+                        messages.map((message, i) => {
+                          return (
+                            <div
+                              className='flex gap-2 p-2 even:bg-gray-50 odd:bg-gray-100'
+                              key={i}
+                            >
+                              {message.color === 'black' ? (
+                                <p className='text-sm break-all'>
+                                  <span className='font-medium'>
+                                    {message.sender && message.sender}:
+                                  </span>{' '}
+                                  {message.content}
+                                </p>
+                              ) : (
+                                <p
+                                  className='text-sm break-all font-medium'
+                                  style={{ color: message.color }}
+                                >
+                                  {message.sender && message.sender}{' '}
+                                  {message.content}
+                                </p>
+                              )}
+                            </div>
+                          )
+                        })}
                     </div>
                   </div>
-                </div>
-              )}
-
-              <div
-                className={`flex flex-col justify-between ${
-                  guessedUsers[0]?.id === socket.id ? 'h-[380px]' : 'h-full'
-                }`}
-              >
-                <div className='flex flex-col-reverse overflow-y-auto'>
                   <div>
-                    {messages &&
-                      messages.map((message, i) => {
-                        return (
-                          <div
-                            className='flex gap-2 p-2 even:bg-gray-50 odd:bg-gray-100'
-                            key={i}
-                          >
-                            {message.color === 'black' ? (
-                              <p className='text-sm break-all'>
-                                <span className='font-medium'>
-                                  {message.sender && message.sender}:
-                                </span>{' '}
-                                {message.content}
-                              </p>
-                            ) : (
-                              <p
-                                className='text-sm break-all font-medium'
-                                style={{ color: message.color }}
-                              >
-                                {message.sender && message.sender}{' '}
-                                {message.content}
-                              </p>
-                            )}
-                          </div>
-                        )
-                      })}
+                    <input
+                      className='input m-border w-full focus:outline-none'
+                      type='text'
+                      placeholder='Type your guess here...'
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      onKeyPress={(event) => {
+                        event.key === 'Enter' && sendMessage()
+                      }}
+                      maxLength={30}
+                    />
                   </div>
-                </div>
-                <div>
-                  <input
-                    className='input input-bordered border-black w-full focus:outline-none'
-                    type='text'
-                    placeholder='Type your guess here...'
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyPress={(event) => {
-                      event.key === 'Enter' && sendMessage()
-                    }}
-                    maxLength={30}
-                  />
                 </div>
               </div>
             </div>
-          </div>
 
-          {selectedWord && drawer.id === socket.id && renderOptions()}
+            {selectedWord && drawer.id === socket.id && renderOptions()}
+          </div>
         </div>
       )}
     </FadeIn>

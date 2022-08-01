@@ -5,13 +5,68 @@
 @layer base {
   html,
   body {
-    @apply bg-base-100 font-sans overflow-x-hidden h-screen w-full;
+    @apply bg-white font-sans overflow-x-hidden h-screen w-full;
   }
+}
 
+@layer components {
   .options > div > div {
     box-shadow: none !important;
   }
   .options .flexbox-fix {
     display: none !important;
+  }
+
+  /* Background */
+  .hero {
+    @apply bg-[url('/img/bg.svg')] bg-cover bg-no-repeat;
+  }
+
+  /* Border */
+  .m-border {
+    @apply border-2 border-black rounded-md opacity-100;
+  }
+
+  /* Button */
+  .m-btn {
+    @apply relative py-2 px-4 text-lg font-medium bg-white m-border;
+    transform-style: preserve-3d;
+    transform: translateZ(1rem);
+  }
+  .m-btn:hover {
+    @apply transition-all ease-out duration-500;
+  }
+  .m-btn:after {
+    @apply transition-all ease-out duration-500 absolute m-border top-[0.5rem] left-[0.5rem] w-full h-full pointer-events-none content-[''];
+    transform: translateZ(-0.1rem);
+  }
+  .m-btn:hover:after {
+    @apply top-[-2px] left-[-2px];
+  }
+  .m-btn.m-btn-primary:after,
+  .m-btn.m-btn-primary:hover,
+  .m-btn.m-btn-primary:hover:after {
+    @apply bg-violet-300;
+  }
+  .m-btn.m-btn-secondary:after,
+  .m-btn.m-btn-secondary:hover,
+  .m-btn.m-btn-secondary:hover:after {
+    @apply bg-lime-300;
+  }
+  .m-btn.m-btn-accent:after,
+  .m-btn.m-btn-accent:hover,
+  .m-btn.m-btn-accent:hover:after {
+    @apply bg-red-300;
+  }
+  .m-btn.m-btn-disabled:after,
+  .m-btn.m-btn-disabled:hover,
+  .m-btn.m-btn-disabled:hover:after {
+    @apply bg-gray-300;
+  }
+  .m-btn-sm {
+    @apply py-1 px-2 text-sm;
+  }
+  .m-btn-lg {
+    @apply py-4 px-6 text-lg;
   }
 }

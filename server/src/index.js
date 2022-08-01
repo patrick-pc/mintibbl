@@ -38,7 +38,10 @@ let interval
 io.on('connection', (socket) => {
   socket.on('create_room', (address, ensName, name) => {
     // Generate random id
-    const randomRoomId = Math.random().toString(36).slice(-6)
+    const randomRoomId = `P${Math.random()
+      .toString(36)
+      .slice(-6)
+      .toUpperCase()}`
     const user = {
       id: socket.id,
       address: address,
@@ -53,7 +56,7 @@ io.on('connection', (socket) => {
     io.to(randomRoomId).emit('message', {
       sender: user.name,
       content: 'joined.',
-      color: '#22C55E',
+      color: '#84CC16',
     })
   })
 
@@ -89,7 +92,7 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('message', {
       sender: user.name,
       content: 'joined.',
-      color: '#22C55E',
+      color: '#84CC16',
     })
     callback(getRoom(roomId))
   })
@@ -151,7 +154,7 @@ io.on('connection', (socket) => {
         io.to(room.id).emit('message', {
           sender: 'The word was ',
           content: `"${room.selectedWord}"`,
-          color: '#22C55E',
+          color: '#84CC16',
         })
 
         clearInterval(interval)
@@ -231,7 +234,7 @@ io.on('connection', (socket) => {
         io.to(room.id).emit('message', {
           sender: user.name,
           content: 'guessed the word!',
-          color: '#22C55E',
+          color: '#84CC16',
         })
         io.to(room.id).emit('guessed_correctly') // For sound fx
         console.log(`${user.name} guessed the word!`)
@@ -243,7 +246,7 @@ io.on('connection', (socket) => {
           io.to(room.id).emit('message', {
             sender: 'The word was ',
             content: `"${room.selectedWord}"`,
-            color: '#22C55E',
+            color: '#84CC16',
           })
 
           clearInterval(interval)

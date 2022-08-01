@@ -8,7 +8,7 @@ const Header = () => {
         <NextLink href='/'>
           <div className='flex flex-shrink-0 items-center justify-center gap-2 font-medium text-2xl cursor-pointer'>
             <img src='/img/dino.png' alt='Dino Drawing' className='h-10 w-10' />
-            mintibbl.fun
+            mintibbl
           </div>
         </NextLink>
       </div>
@@ -39,7 +39,7 @@ const Header = () => {
                       <button
                         onClick={openConnectModal}
                         type='button'
-                        className='btn btn-outline hover:bg-black hover:text-white'
+                        className='m-btn m-btn-accent'
                       >
                         Connect Wallet
                       </button>
@@ -51,7 +51,7 @@ const Header = () => {
                       <button
                         onClick={openChainModal}
                         type='button'
-                        className='btn btn-outline hover:bg-black hover:text-white'
+                        className='m-btn m-btn-accent'
                       >
                         Wrong network
                       </button>

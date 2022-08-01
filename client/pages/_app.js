@@ -47,7 +47,7 @@ function MyApp({ Component, pageProps }) {
       <WagmiConfig client={wagmiClient}>
         <RainbowKitProvider chains={chains}>
           <Head>
-            <title>mintibbl.fun</title>
+            <title>mintibbl</title>
             <meta
               name='description'
               content='Draw, guess, and mint with your frens!'

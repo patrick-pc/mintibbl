@@ -9,35 +9,11 @@ let current = {
 let drawing = false
 
 const DrawingBoard = ({ socket, color, canvasRef, editOption }) => {
-  // const color = colorRef.current
-  // console.log(colorRef.current)
-
   useEffect(() => {
     const canvas = canvasRef.current
     const context = canvas.getContext('2d')
-    // --------------- getContext() method returns a drawing context on the canvas-----
-    // const test = colorsRef.current
 
-    // ----------------------- Colors --------------------------------------------------
-
-    // const colors = document.getElementsByClassName('color')
-    // console.log(colors, 'the colors')
-    // console.log(test)
-    // set the current color
-    // console.log(current.color)
-
-    // // helper that will update the current color
-    // const onColorUpdate = (e) => {
-    //   color = e.target.className.split(' ')[1]
-    // }
-
-    // // loop through the color elements and add the click event listeners
-    // for (let i = 0; i < colors.length; i++) {
-    //   colors[i].addEventListener('click', onColorUpdate, false)
-    // }
-
-    // ------------------------------- create the drawing ----------------------------
-
+    // Drawing
     const drawLine = (x0, y0, x1, y1, color, emit) => {
       context.beginPath()
       context.moveTo(x0, y0)
@@ -63,8 +39,7 @@ const DrawingBoard = ({ socket, color, canvasRef, editOption }) => {
       })
     }
 
-    // ---------------- mouse movement --------------------------------------
-
+    // Mouse movement
     const onMouseDown = (e) => {
       const bcr = e.target.getBoundingClientRect()
       drawing = true
@@ -93,18 +68,9 @@ const DrawingBoard = ({ socket, color, canvasRef, editOption }) => {
       if (!drawing) return
 
       drawing = false
-      // drawLine(
-      //   current.x,
-      //   current.y,
-      //   e.clientX - bcr.x || e.touches[0].clientX - bcr.x,
-      //   e.clientY - bcr.y || e.touches[0].clientY - bcr.y,
-      //   current.color,
-      //   true
-      // )
     }
 
-    // ----------- limit the number of events per second -----------------------
-
+    // Limit the number of events per second
     const throttle = (callback, delay) => {
       let previousCall = new Date().getTime()
       return function () {
@@ -117,8 +83,7 @@ const DrawingBoard = ({ socket, color, canvasRef, editOption }) => {
       }
     }
 
-    // -----------------add event listeners to our canvas ----------------------
-
+    // Canvas event listeners
     canvas.addEventListener('mousedown', onMouseDown, false)
     canvas.addEventListener('mouseup', onMouseUp, false)
     canvas.addEventListener('mouseout', onMouseUp, false)
@@ -130,8 +95,7 @@ const DrawingBoard = ({ socket, color, canvasRef, editOption }) => {
     canvas.addEventListener('touchcancel', onMouseUp, false)
     canvas.addEventListener('touchmove', throttle(onMouseMove, 10), false)
 
-    // -------------- make the canvas fill its parent component -----------------
-
+    // Make the canvas fill its parent component
     const onResize = () => {
       // let parentWidth = canvasParentRef.current.clientWidth
       // let parentHeight = canvasParentRef.current.clientHeight
@@ -152,8 +116,6 @@ const DrawingBoard = ({ socket, color, canvasRef, editOption }) => {
     window.addEventListener('resize', onResize, false)
     onResize()
 
-    // ----------------------- socket.io connection ----------------------------
-
     const onDrawingEvent = (data) => {
       const w = canvas.width
       const h = canvas.height
@@ -166,32 +128,23 @@ const DrawingBoard = ({ socket, color, canvasRef, editOption }) => {
       context.fillRect(0, 0, canvas.width, canvas.height)
     }
 
+    // Socket.io events
     socket.on('drawing', onDrawingEvent)
-
-    // socket.on('erase', ({ mousedown, mousemove }) => {
-    //   eraseCanvas(context, canvas, 'white', mousedown, mousemove)
-    // })
 
     socket.on('clear', () => {
       clearCanvas()
-      // clearCanvas(context, canvas)
-      // context.clearRect(0, 0, canvas.width, canvas.height)
-      // context.fillStyle='white'
-      // context.fillRect(0, 0, canvas.width, canvas.height)
     })
   }, [])
 
-  //  Color / Edit Option change useEffect
+  //  Color and edit option
   useEffect(() => {
-    // current.color = color
     current.editOption =
       editOption === 'draw'
         ? (current.color = color)
         : (current.color = '#FFFFFF')
-    // editOptionRef.current = editOption
   }, [color, editOption])
 
-  return <canvas ref={canvasRef} className='cursor-pointer rounded-lg' />
+  return <canvas ref={canvasRef} className='cursor-pointer rounded-md' />
 }
 
 export default DrawingBoard

@@ -17,13 +17,13 @@ const Footer = () => {
           👾 discord
         </a>
       </div>
-      <a
+      {/* <a
         href='https://www.flaticon.com/collections/MjYxODIyNjc='
         target='_blank'
         className='text-xs font-light opacity-75 hover:opacity-100'
       >
         Icons by Flaticon
-      </a>
+      </a> */}
     </footer>
   )
 }
