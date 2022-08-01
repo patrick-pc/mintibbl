@@ -1,9 +1,14 @@
-export const CONTRACT_ADDRESS = '0x0D05f5186422e07AA1981f52bcB3d5043dBc4E45'
+export const CONTRACT_ADDRESS = '0x3807Be837a65ebCf97647F6490b4337D03D76579'
 export const ABI = [
   {
     inputs: [],
     stateMutability: 'nonpayable',
     type: 'constructor',
+  },
+  {
+    inputs: [],
+    name: 'Mintibbl__TokenUriAlreadyExists',
+    type: 'error',
   },
   {
     anonymous: false,
@@ -53,6 +58,25 @@ export const ABI = [
       },
     ],
     name: 'ApprovalForAll',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'sender',
+        type: 'address',
+      },
+      {
+        indexed: true,
+        internalType: 'uint256',
+        name: 'tokenId',
+        type: 'uint256',
+      },
+    ],
+    name: 'NewDrawing',
     type: 'event',
   },
   {
@@ -131,6 +155,19 @@ export const ABI = [
         internalType: 'address',
         name: '',
         type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'getTokenCounter',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
       },
     ],
     stateMutability: 'view',
@@ -320,6 +357,25 @@ export const ABI = [
         internalType: 'string',
         name: '',
         type: 'string',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'string',
+        name: 'tokenURI',
+        type: 'string',
+      },
+    ],
+    name: 'tokenURIExists',
+    outputs: [
+      {
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
       },
     ],
     stateMutability: 'view',

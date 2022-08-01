@@ -218,6 +218,7 @@ const Home = () => {
     })
 
     socket.on('end_turn', (room) => {
+      console.log(room)
       setPreviousDrawer(
         room.drawnUsers[
           room.drawerIndex === 0
@@ -284,6 +285,9 @@ const Home = () => {
       } else if (previousDrawer.address) {
         artist = previousDrawer.address
       }
+
+      console.log(artist)
+      console.log(previousDrawer)
 
       // Set metadata depending on free mint or contract mint
       if (isFreeMint) {
@@ -380,59 +384,12 @@ const Home = () => {
         referer: 'https://mintnft.today/',
       }
       const res = await axios(config)
-      console.log(res)
 
+      const openSeaUrl = `https://opensea.io/assets/matic/0x03e055692e77e56abf7f5570d9c64c194ba15616/${res.data.data.tokenId}`
+      const polygonScanUrl = `https://polygonscan.com/tx/${res.data.data.transactionHash}`
+
+      toastMintSuccess(polygonScanUrl, openSeaUrl)
       setGuessedUsers([])
-      toast.custom(
-        (t) => (
-          <div
-            className={`${
-              t.visible ? 'animate-enter' : 'animate-leave'
-            } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
-          >
-            <div className='flex-1 w-0 p-4'>
-              <div className='flex items-center'>
-                <div className='text-2xl'>✨</div>
-                <div className='flex flex-col flex-1  ml-3 gap-2'>
-                  <p className='text-sm font-medium'>
-                    Successfully minted drawing!
-                  </p>
-
-                  <div className='flex gap-2'>
-                    <div className='w-full'>
-                      <a
-                        href={`https://opensea.io/assets/matic/0x03e055692e77e56abf7f5570d9c64c194ba15616/${res.data.data.tokenId}`}
-                        target='_blank'
-                        className='btn btn-sm btn-block btn-outline border-gray-300 text-gray-500 hover:bg-violet-500 hover:border-violet-500'
-                      >
-                        OpenSea
-                      </a>
-                    </div>
-                    <div className='w-full'>
-                      <a
-                        href={`https://polygonscan.com/tx/${res.data.data.transactionHash}`}
-                        target='_blank'
-                        className='btn btn-sm btn-block btn-outline border-gray-300 text-gray-500 hover:bg-violet-500 hover:border-violet-500'
-                      >
-                        PolygonScan
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className='flex border-l border-gray-200'>
-              <button
-                onClick={() => toast.dismiss(t.id)}
-                className='w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-violet-600'
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        ),
-        { duration: 15000 }
-      )
     } catch (error) {
       console.error(error)
 
@@ -462,59 +419,13 @@ const Home = () => {
       const tokenUri = await pinToIPFS(false)
       const txResponse = await mintibblContract.mintDrawing(tokenUri)
       const res = await txResponse.wait()
-      console.log(res)
+      const tokenId = res.events[0].args[1].toString()
 
+      const openSeaUrl = `https://testnets.opensea.io/assets/mumbai/0x3807Be837a65ebCf97647F6490b4337D03D76579/${tokenId}`
+      const polygonScanUrl = `https://mumbai.polygonscan.com/tx/${res.transactionHash}`
+
+      toastMintSuccess(polygonScanUrl, openSeaUrl)
       setGuessedUsers([])
-      toast.custom(
-        (t) => (
-          <div
-            className={`${
-              t.visible ? 'animate-enter' : 'animate-leave'
-            } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
-          >
-            <div className='flex-1 w-0 p-4'>
-              <div className='flex items-center'>
-                <div className='text-2xl'>✨</div>
-                <div className='flex flex-col flex-1  ml-3 gap-2'>
-                  <p className='text-sm font-medium'>
-                    Successfully minted drawing!
-                  </p>
-
-                  <div className='flex gap-2'>
-                    <div className='w-full'>
-                      <a
-                        href={`https://testnets.opensea.io/assets/mumbai/0x0d05f5186422e07aa1981f52bcb3d5043dbc4e45/${res.transactionIndex}`}
-                        target='_blank'
-                        className='btn btn-sm btn-block btn-outline border-gray-300 text-gray-500 hover:bg-violet-500 hover:border-violet-500'
-                      >
-                        OpenSea
-                      </a>
-                    </div>
-                    <div className='w-full'>
-                      <a
-                        href={`https://mumbai.polygonscan.com/tx/${res.transactionHash}`}
-                        target='_blank'
-                        className='btn btn-sm btn-block btn-outline border-gray-300 text-gray-500 hover:bg-violet-500 hover:border-violet-500'
-                      >
-                        PolygonScan
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className='flex border-l border-gray-200'>
-              <button
-                onClick={() => toast.dismiss(t.id)}
-                className='w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-violet-600'
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        ),
-        { duration: 15000 }
-      )
     } catch (error) {
       console.error(error)
 
@@ -539,6 +450,53 @@ const Home = () => {
       u8arr[n] = bstr.charCodeAt(n)
     }
     return new File([u8arr], fileName, { type: mime })
+  }
+
+  const toastMintSuccess = (polygonScanUrl, openSeaUrl, duration = 10000) => {
+    toast.custom(
+      (t) => (
+        <div
+          className={`${
+            t.visible ? 'animate-enter' : 'animate-leave'
+          } flex max-w-md w-full bg-white m-border shadow-lg pointer-events-auto`}
+        >
+          <div className='flex-1 w-0 p-4'>
+            <div className='flex items-center'>
+              <div className='flex flex-col flex-1 gap-2'>
+                <p className='text-sm lg:text-base text-center font-medium'>
+                  ✨ Successfully minted drawing! ✨
+                </p>
+                <div className='flex w-full gap-2'>
+                  <a
+                    href={polygonScanUrl}
+                    target='_blank'
+                    className='text-center btn-block bg-violet-300 border-2 border-black rounded-md text-sm font-medium py-1 px-2'
+                  >
+                    PolygonScan
+                  </a>
+                  <a
+                    href={openSeaUrl}
+                    target='_blank'
+                    className='text-center btn-block bg-lime-300 border-2 border-black rounded-md text-sm font-medium py-1 px-2'
+                  >
+                    OpenSea
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className='flex border-l-2 border-black'>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className='w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-red-500 text-sm font-medium'
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: duration }
+    )
   }
 
   const handleColorChange = (value) => {
@@ -875,7 +833,7 @@ const Home = () => {
                         className={`w-full ${isFreeMint ? 'block' : 'hidden'}`}
                       >
                         <button
-                          className='m-btn m-btn-primary m-btn-sm btn-block'
+                          className='m-btn m-btn-primary m-btn-sm btn-block disabled:m-btn-disabled disabled:cursor-not-allowed'
                           onClick={freeMintDrawing}
                           disabled={isMining}
                         >
@@ -888,7 +846,7 @@ const Home = () => {
                         }`}
                       >
                         <button
-                          className='m-btn m-btn-secondary m-btn-sm btn-block'
+                          className='m-btn m-btn-secondary m-btn-sm btn-block disabled:m-btn-disabled disabled:cursor-not-allowed'
                           onClick={mintDrawing}
                           disabled={isMining}
                         >

@@ -320,60 +320,61 @@ io.on('connection', (socket) => {
     const { roomId, user } = leaveRoom(socket.id)
     const room = getRoom(roomId)
 
-    if (room && user) {
-      // End game if one user left
-      if (getUsers(roomId).length === 1) {
-        clearInterval(interval)
-        room.isGameStarted = false
-        room.isGameOver = true
-        io.to(roomId).emit('game_over', room)
-      }
-
-      // End turn if drawer leaves
-      if (user.id === room.drawer.id) {
-        clearInterval(interval)
-        chooseDrawer(room, socket.id)
-
-        // If all users have drawn, start next round
-        if (room.drawnUsers.length === getUsers(room.id).length) {
-          console.log('end_round')
-
-          // Check if the game is over
-          if (room.round == room.totalRounds) {
-            console.log('Game over!')
-            room.isGameStarted = false
-            room.isGameOver = true
-            io.to(room.id).emit('game_over', getRoom(room.id))
-          }
-
-          room.round++
-          room.newRound = true
-          resetDrawingState(room)
-
-          io.to(room.id).emit('end_turn', room)
-          room.drawnUsers = []
-          room.selectedWord = ''
-        } else {
-          console.log('end_turn')
-
-          room.newRound = false
-          io.to(room.id).emit('end_turn', room)
-        }
-        room.timer = room.drawTime
-        room.guessedUsers = []
-        room.isDrawing = false
-      }
-
-      io.to(roomId).emit('message', {
-        sender: user.name,
-        content: 'left.',
-        color: '#EF4444',
-      })
-      io.to(roomId).emit('room_data', room)
-
-      // Delete room if empty
-      if (getUsers(roomId).length === 0) deleteRoom(roomId)
+    if (!room || room.users.length === 0) return
+    // if (room && user) {
+    // End game if one user left
+    if (getUsers(roomId).length === 1) {
+      clearInterval(interval)
+      room.isGameStarted = false
+      room.isGameOver = true
+      io.to(roomId).emit('game_over', room)
     }
+
+    // End turn if drawer leaves
+    if (user.id === room.drawer.id) {
+      clearInterval(interval)
+      chooseDrawer(room, socket.id)
+
+      // If all users have drawn, start next round
+      if (room.drawnUsers.length === getUsers(room.id).length) {
+        console.log('end_round')
+
+        // Check if the game is over
+        if (room.round == room.totalRounds) {
+          console.log('Game over!')
+          room.isGameStarted = false
+          room.isGameOver = true
+          io.to(room.id).emit('game_over', getRoom(room.id))
+        }
+
+        room.round++
+        room.newRound = true
+        resetDrawingState(room)
+
+        io.to(room.id).emit('end_turn', room)
+        room.drawnUsers = []
+        room.selectedWord = ''
+      } else {
+        console.log('end_turn')
+
+        room.newRound = false
+        io.to(room.id).emit('end_turn', room)
+      }
+      room.timer = room.drawTime
+      room.guessedUsers = []
+      room.isDrawing = false
+    }
+
+    io.to(roomId).emit('message', {
+      sender: user.name,
+      content: 'left.',
+      color: '#EF4444',
+    })
+    io.to(roomId).emit('room_data', room)
+
+    // Delete room if empty
+    if (getUsers(roomId).length === 0) deleteRoom(roomId)
+    // }
   })
 })
 
