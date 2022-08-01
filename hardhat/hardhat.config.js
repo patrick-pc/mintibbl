@@ -15,6 +15,8 @@ const MAINNET_RPC_URL =
   process.env.MAINNET_RPC_URL || 'https://eth-mainnet.alchemyapi.io/v2/your-api-key'
 const POLYGON_MAINNET_RPC_URL =
   process.env.POLYGON_MAINNET_RPC_URL || 'https://polygon-mainnet.g.alchemy.com/v2/your-api-key'
+const POLYGON_MUMBAI_RPC_URL =
+  process.env.POLYGON_MUMBAI_RPC_URL || 'https://polygon-mumbai.g.alchemy.com/v2/your-api-key'
 
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || 'Your etherscan API key'
 const POLYGONSCAN_API_KEY = process.env.POLYGONSCAN_API_KEY || 'Your polygonscan API key'
@@ -56,6 +58,12 @@ module.exports = {
       saveDeployments: true,
       chainId: 137,
     },
+    polygonMumbai: {
+      url: POLYGON_MUMBAI_RPC_URL,
+      accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+      saveDeployments: true,
+      chainId: 80001,
+    },
   },
   etherscan: {
     // yarn hardhat verify --network <NETWORK> <CONTRACT_ADDRESS> <CONSTRUCTOR_PARAMETERS>
@@ -64,6 +72,7 @@ module.exports = {
       goerli: ETHERSCAN_API_KEY,
       mainnet: ETHERSCAN_API_KEY,
       polygon: POLYGONSCAN_API_KEY,
+      polygonMumbai: POLYGONSCAN_API_KEY,
     },
   },
   gasReporter: {

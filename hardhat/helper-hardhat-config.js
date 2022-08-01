@@ -17,6 +17,9 @@ const networkConfig = {
   137: {
     name: 'polygon',
   },
+  8001: {
+    name: 'polygonMumbai',
+  },
 }
 
 const developmentChains = ['hardhat', 'localhost']

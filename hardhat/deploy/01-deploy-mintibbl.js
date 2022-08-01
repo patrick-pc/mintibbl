@@ -11,7 +11,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
   log('----------------------------------------------------')
   const args = []
-  const mintibble = await deploy('Mintibble', {
+  const mintibbl = await deploy('Mintibbl', {
     from: deployer,
     args: args,
     log: true,
@@ -21,9 +21,9 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   // Verify the deployment
   if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
     log('Verifying...')
-    await verify(mintibble.address, args)
+    await verify(mintibbl.address, args)
   }
   log('----------------------------------------------------')
 }
 
-module.exports.tags = ['all', 'mintibble']
+module.exports.tags = ['all', 'mintibbl']
