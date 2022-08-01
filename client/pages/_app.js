@@ -46,14 +46,6 @@ function MyApp({ Component, pageProps }) {
     return (
       <WagmiConfig client={wagmiClient}>
         <RainbowKitProvider chains={chains}>
-          <Head>
-            <title>mintibbl</title>
-            <meta
-              name='description'
-              content='Draw, guess, and mint with your frens!'
-            />
-            <link rel='icon' href='/favicon.png' />
-          </Head>
           <div className='min-h-screen w-full'>
             <Header />
             <Component {...pageProps} />

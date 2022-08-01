@@ -34,10 +34,10 @@
     transform: translateZ(1rem);
   }
   .m-btn:hover {
-    @apply transition-all ease-out duration-500;
+    @apply transition-all ease-out duration-300;
   }
   .m-btn:after {
-    @apply transition-all ease-out duration-500 absolute m-border top-[0.5rem] left-[0.5rem] w-full h-full pointer-events-none content-[''];
+    @apply transition-all ease-out duration-300 absolute m-border top-[0.5rem] left-[0.5rem] w-full h-full pointer-events-none content-[''];
     transform: translateZ(-0.1rem);
   }
   .m-btn:hover:after {

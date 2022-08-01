@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router'
-import { useState, useRef, useEffect, lazy } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
   useAccount,
   useEnsName,
@@ -66,6 +66,7 @@ const Home = () => {
   const [previousDrawing, setPreviousDrawing] = useState('')
   const [previousDrawer, setPreviousDrawer] = useState('')
   const [previousWord, setPreviousWord] = useState('')
+  const [winner, setWinner] = useState('')
 
   const [users, setUsers] = useState([])
   const [message, setMessage] = useState('')
@@ -225,7 +226,9 @@ const Home = () => {
         ]
       )
       setPreviousWord(room.selectedWord)
-      setPreviousDrawing(canvasRef.current.toDataURL('image/svg'))
+      setPreviousDrawing(
+        canvasRef.current ? canvasRef.current.toDataURL('image/svg') : ''
+      )
       setGuessedUsers(room.guessedUsers)
 
       if (room.isGameOver) return
@@ -239,14 +242,16 @@ const Home = () => {
     })
 
     socket.on('game_over', (room) => {
-      console.log(room)
-      console.log(Math.max(...room.users.map((user) => user.points)))
+      const users = [...room.users]
+      const winner = users.sort((a, b) => b.points - a.points)[0]
+
+      setWinner(winner.name)
+      setUsers(room.users)
+      setCanvasStatus('game_over')
+      playAudio('winner.mp3')
 
       const timeOut = 10000
       if (room.users.length === 1) timeOut = 1000
-
-      setCanvasStatus('game_over')
-      playAudio('winner.mp3')
 
       setTimeout(() => {
         setIsGameStarted(false)
@@ -260,6 +265,7 @@ const Home = () => {
         setGuessedUsers([])
         setMessages([])
         setMessage('')
+        setWinner('')
       }, timeOut)
     })
   }, [])
@@ -553,7 +559,7 @@ const Home = () => {
     setEditOption('erase')
   }
   const handleClear = () => {
-    setEditOption('draw')
+    handleDrawOption()
     socket.emit('clear')
   }
   const options = [
@@ -583,15 +589,21 @@ const Home = () => {
   }
 
   const renderNewRound = () => {
-    return <div className='text-xl text-center font-medium'>Round {round}</div>
+    return (
+      <div className='text-xl text-center font-medium animate-drop'>
+        Round {round}
+      </div>
+    )
   }
 
   const renderWordSelection = () => {
     if (drawer.id === socket.id) {
       return (
         <div className='flex flex-col gap-4'>
-          <div className='text-lg text-center font-medium'>Choose a word</div>
-          <div className='flex gap-4 text-black'>
+          <div className='text-lg text-center font-medium animate-drop'>
+            Choose a word
+          </div>
+          <div className='flex gap-4 text-black animate-drop'>
             <button
               className='m-btn m-btn-primary m-btn-sm'
               onClick={() => {
@@ -625,8 +637,10 @@ const Home = () => {
     } else {
       return (
         <div className='text-lg text-center font-medium'>
-          <span className='text-violet-500 font-bold'>{drawer.name}</span> is
-          choosing a word!
+          <span className='text-violet-500 font-bold animate-drop'>
+            {drawer.name}
+          </span>{' '}
+          is choosing a word!
         </div>
       )
     }
@@ -634,16 +648,16 @@ const Home = () => {
 
   const renderScoreboard = () => {
     return (
-      <div className='flex flex-col gap-4'>
+      <div className='flex flex-col gap-4 animate-drop'>
         <div className='text-lg text-center font-medium'>
           The word was{' '}
-          <span className='text-violet-500 font-bold'>"{selectedWord}"</span>
+          <span className='text-lime-500 font-bold'>"{selectedWord}"</span>
         </div>
 
         <div className='flex flex-col gap-2'>
           {guessedUsers.map((user) => {
             return (
-              <div key={user.id}>
+              <div className='font-medium' key={user.id}>
                 {user.name}:{' '}
                 <span className='text-lime-500'>{user.points}</span>
               </div>
@@ -655,7 +669,13 @@ const Home = () => {
   }
 
   const renderResult = () => {
-    return <div>Game over!</div>
+    return (
+      <div className='text-lg text-center font-medium animate-drop'>
+        Winner:
+        <br />
+        <span className='text-xl text-lime-500 font-bold'>✨ {winner} ✨</span>
+      </div>
+    )
   }
 
   const renderCanvasStatus = () => {

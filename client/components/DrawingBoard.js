@@ -20,7 +20,7 @@ const DrawingBoard = ({ socket, color, canvasRef, editOption }) => {
       context.lineTo(x1, y1)
       context.lineCap = 'round'
       context.lineJoin = 'round'
-      context.lineWidth = 15
+      context.lineWidth = 10
       context.strokeStyle = color
       context.stroke()
       context.closePath()

@@ -48,7 +48,7 @@ const Join = ({ address, name, setName, joinRoom, createRoom }) => {
               Draw. Guess. Mint.
             </h1>
             <h2 className='text-black text-xl font-medium leading-[1.2]'>
-              Draw some cool sh*t, laugh while guessing, and make them NFT!
+              Draw some cool sh*t, laugh while guessing, and make them NFTs!
             </h2>
             <p className='text-sm opacity-50'>It's free, even gas!</p>
           </div>
