@@ -66,6 +66,9 @@
   .m-btn-sm {
     @apply py-1 px-2 text-sm;
   }
+  .m-btn-md {
+    @apply py-2 px-4 text-base;
+  }
   .m-btn-lg {
     @apply py-4 px-6 text-lg;
   }

@@ -144,7 +144,9 @@ const DrawingBoard = ({ socket, color, canvasRef, editOption }) => {
         : (current.color = '#FFFFFF')
   }, [color, editOption])
 
-  return <canvas ref={canvasRef} className='cursor-pointer rounded-md' />
+  return (
+    <canvas ref={canvasRef} className='cursor-pointer rounded-md select-none' />
+  )
 }
 
 export default DrawingBoard

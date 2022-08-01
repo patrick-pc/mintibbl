@@ -699,13 +699,13 @@ const Home = () => {
     audio.play()
   }
 
-  if (!isConnected) {
-    return (
-      <div className='flex items-center justify-center h-96 w-full'>
-        <Orbit size={40} />
-      </div>
-    )
-  }
+  // if (!isConnected) {
+  //   return (
+  //     <div className='flex items-center justify-center h-96 w-full'>
+  //       <Orbit size={40} />
+  //     </div>
+  //   )
+  // }
   return (
     <FadeIn>
       {!isGameStarted ? (
@@ -731,13 +731,13 @@ const Home = () => {
         <div className='container mx-auto'>
           <div className='flex flex-col gap-4'>
             <div className='flex items-center justify-between m-border p-2 mx-4'>
-              <div className='text-lg font-medium'>
+              <div className='text-sm lg:text-lg font-medium'>
                 Round {round} of {totalRounds}
               </div>
 
               <div>
                 {selectedWord && (
-                  <div className='text-center text-3xl'>
+                  <div className='text-center lg:text-3xl'>
                     {drawer.id === socket.id ? (
                       <span className='tracking-wide font-medium'>
                         {selectedWord}
@@ -752,7 +752,9 @@ const Home = () => {
               </div>
 
               <div className='flex items-center justify-center gap-2'>
-                <span className='text-lg font-medium'>{drawTime}</span>
+                <span className='text-sm lg:text-lg font-medium'>
+                  {drawTime}
+                </span>
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   className='h-6 w-6'
@@ -817,7 +819,7 @@ const Home = () => {
               </div>
 
               <div
-                className={`relative min-w-[350px] h-[350px] md:min-w-[600px] md:h-[600px] m-border ${
+                className={`relative min-w-[350px] h-[350px] md:min-w-[600px] md:h-[600px] m-border select-none ${
                   drawer.id !== socket.id && 'pointer-events-none'
                 }`}
               >
