@@ -12,7 +12,7 @@ const Lobby = ({
 }) => {
   return (
     <div className='container mx-auto'>
-      <div className='flex flex-col lg:flex-row items-center justify-center gap-8 mx-4 mt-20'>
+      <div className='flex flex-col lg:flex-row items-center justify-center gap-8 mx-4'>
         {/* Game Settings */}
         <div className='w-full lg:w-[400px]'>
           <div className='flex items-center justify-center'>

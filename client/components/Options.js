@@ -15,7 +15,7 @@ const Options = ({ options, editOption, color, handleColorChange }) => {
     return (
       <button
         key={index}
-        className={`p-4 border border-black  rounded-full ${
+        className={`border-2 border-black rounded-full p-4 ${
           e.name === editOption && 'ring ring-black'
         }`}
         onClick={e.handler}

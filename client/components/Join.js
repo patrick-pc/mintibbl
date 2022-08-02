@@ -24,8 +24,8 @@ const Join = ({ address, name, setName, joinRoom, createRoom }) => {
   }
 
   return (
-    <div className='container mx-auto'>
-      <div className='flex flex-col lg:flex-row items-center justify-center gap-8 mx-4 mt-20'>
+    <div className='flex flex-col container mx-auto gap-40'>
+      <div className='flex flex-col lg:flex-row items-center justify-center gap-8 mx-4'>
         {/* User */}
         <div className='w-full lg:w-[400px]'>
           <div className='flex items-center justify-center'>
@@ -77,7 +77,7 @@ const Join = ({ address, name, setName, joinRoom, createRoom }) => {
         </div>
       </div>
 
-      <div className='flex flex-col gap-8 mx-4 mt-40'>
+      <div className='flex flex-col gap-8 mx-4'>
         <div className='flex flex-col md:flex-row items-center justify-between'>
           <h3 className='text-lg font-medium'>Latest Drawings</h3>
 

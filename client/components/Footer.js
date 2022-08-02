@@ -1,6 +1,6 @@
 const Footer = () => {
   return (
-    <footer className='flex flex-col items-center justify-center text-gray-500 font-medium gap-2 p-10 mt-16 sticky top-[100vh]'>
+    <footer className='flex flex-col items-center justify-center text-gray-500 font-medium gap-2 p-12 mt-16 sticky top-[100vh]'>
       <div className='flex gap-4'>
         <a
           href='https://twitter.com/mintibbl'
