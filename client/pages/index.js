@@ -218,7 +218,6 @@ const Home = () => {
     })
 
     socket.on('end_turn', (room) => {
-      console.log(room)
       setPreviousDrawer(
         room.drawnUsers[
           room.drawerIndex === 0
@@ -286,9 +285,6 @@ const Home = () => {
         artist = previousDrawer.address
       }
 
-      console.log(artist)
-      console.log(previousDrawer)
-
       // Set metadata depending on free mint or contract mint
       if (isFreeMint) {
         title = `Mintibbl Drawing (Test) - ${previousWord}`
@@ -344,6 +340,8 @@ const Home = () => {
           'x-api-key': process.env.NEXT_PUBLIC_MINT_NFT_API_KEY,
         },
         data: data,
+        origin: 'https://mintibbl.fun/',
+        referer: 'https://mintnft.today/',
       }
       const res = await axios(config)
 
@@ -657,13 +655,13 @@ const Home = () => {
     audio.play()
   }
 
-  // if (!isConnected) {
-  //   return (
-  //     <div className='flex items-center justify-center h-96 w-full'>
-  //       <Orbit size={40} />
-  //     </div>
-  //   )
-  // }
+  if (!isConnected) {
+    return (
+      <div className='flex items-center justify-center h-96 w-full'>
+        <Orbit size={40} />
+      </div>
+    )
+  }
   return (
     <FadeIn>
       {!isGameStarted ? (

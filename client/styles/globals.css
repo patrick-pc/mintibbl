@@ -63,13 +63,35 @@
   .m-btn.m-btn-disabled:hover:after {
     @apply bg-gray-300;
   }
-  .m-btn-sm {
+  .m-btn.m-btn-sm {
     @apply py-1 px-2 text-sm;
   }
-  .m-btn-md {
+  .m-btn.m-btn-md {
     @apply py-2 px-4 text-base;
   }
-  .m-btn-lg {
+  .m-btn.m-btn-lg {
     @apply py-4 px-6 text-lg;
+  }
+
+  .m-item {
+    @apply flex items-center justify-center bg-white m-border;
+    transform-style: preserve-3d;
+    transform: translateZ(1rem);
+  }
+  .m-item:hover {
+    @apply transition-all ease-out duration-300;
+  }
+  .m-item:after {
+    @apply transition-all ease-out duration-300 absolute m-border bottom-[-2px] left-[-2px] w-full h-full pointer-events-none content-[''] bg-blue-300;
+    transform: translateZ(-0.1rem);
+  }
+  .m-item:hover:after {
+    @apply bottom-[.5rem] left-[.5rem];
+  }
+  .tooltip:before {
+    @apply bg-blue-300 text-xs;
+  }
+  .tooltip:after {
+    @apply border-blue-300 border-t-transparent border-l-transparent border-r-transparent;
   }
 }
