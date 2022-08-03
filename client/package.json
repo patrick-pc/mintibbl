@@ -20,6 +20,7 @@
     "react-color": "^2.19.3",
     "react-dom": "18.2.0",
     "react-fade-in": "^2.0.1",
+    "react-google-recaptcha-v3": "^1.10.0",
     "react-hot-toast": "^2.2.0",
     "react-icons": "^4.4.0",
     "sillyname": "^0.1.0",

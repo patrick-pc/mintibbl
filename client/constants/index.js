@@ -1,7 +1,23 @@
-export const CONTRACT_ADDRESS = '0x3807Be837a65ebCf97647F6490b4337D03D76579'
+export const CONTRACT_ADDRESS = '0x1855338dEe20b98E95E2885fA9e67BFC4D09c55E'
 export const ABI = [
   {
-    inputs: [],
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'tokenVerifier',
+        type: 'address',
+      },
+      {
+        internalType: 'bool',
+        name: 'verifyEnabled',
+        type: 'bool',
+      },
+      {
+        internalType: 'uint256',
+        name: 'proofTtl',
+        type: 'uint256',
+      },
+    ],
     stateMutability: 'nonpayable',
     type: 'constructor',
   },
@@ -85,6 +101,25 @@ export const ABI = [
       {
         indexed: true,
         internalType: 'address',
+        name: 'previousOwner',
+        type: 'address',
+      },
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'newOwner',
+        type: 'address',
+      },
+    ],
+    name: 'OwnershipTransferred',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: 'address',
         name: 'from',
         type: 'address',
       },
@@ -136,6 +171,25 @@ export const ABI = [
         internalType: 'uint256',
         name: '',
         type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: '',
+        type: 'bytes32',
+      },
+    ],
+    name: 'consumedToken',
+    outputs: [
+      {
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
       },
     ],
     stateMutability: 'view',
@@ -204,6 +258,21 @@ export const ABI = [
         name: 'tokenURI',
         type: 'string',
       },
+      {
+        internalType: 'bytes32',
+        name: 'expiryToken',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'bytes32',
+        name: 'authToken',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'bytes',
+        name: 'signatureToken',
+        type: 'bytes',
+      },
     ],
     name: 'mintDrawing',
     outputs: [],
@@ -218,6 +287,19 @@ export const ABI = [
         internalType: 'string',
         name: '',
         type: 'string',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'owner',
+    outputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
       },
     ],
     stateMutability: 'view',
@@ -240,6 +322,26 @@ export const ABI = [
       },
     ],
     stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'proofTtl',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'nonpayable',
     type: 'function',
   },
   {
@@ -307,6 +409,32 @@ export const ABI = [
       },
     ],
     name: 'setApprovalForAll',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'proofTtl',
+        type: 'uint256',
+      },
+    ],
+    name: 'setProofTtl',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bool',
+        name: 'verifyEnabled',
+        type: 'bool',
+      },
+    ],
+    name: 'setVerifyEnabled',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -382,6 +510,19 @@ export const ABI = [
     type: 'function',
   },
   {
+    inputs: [],
+    name: 'tokenVerifier',
+    outputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [
       {
         internalType: 'address',
@@ -402,6 +543,55 @@ export const ABI = [
     name: 'transferFrom',
     outputs: [],
     stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'newOwner',
+        type: 'address',
+      },
+    ],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'expiryToken',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'bytes32',
+        name: 'authToken',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'bytes',
+        name: 'signatureToken',
+        type: 'bytes',
+      },
+    ],
+    name: 'validateToken',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'verifyEnabled',
+    outputs: [
+      {
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
+      },
+    ],
+    stateMutability: 'view',
     type: 'function',
   },
 ]

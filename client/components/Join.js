@@ -13,14 +13,14 @@ const Join = ({ address, name, setName, joinRoom, createRoom }) => {
   const fetchNfts = async () => {
     const limit = 15
     const baseURL = `https://polygon-mumbai.g.alchemy.com/nft/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}/getNFTsForCollection/`
-    const fetchURL = `${baseURL}?contractAddress=${CONTRACT_ADDRESS}&withMetadata=${true}&limit=${limit}`
+    // const fetchURL = `${baseURL}?contractAddress=${CONTRACT_ADDRESS}&withMetadata=${true}&limit=${limit}`
+    const fetchURL = `${baseURL}?contractAddress=0x3807be837a65ebcf97647f6490b4337d03d76579&withMetadata=${true}&limit=${limit}`
     const config = {
       method: 'GET',
       url: fetchURL,
     }
     const res = await axios(config)
     setNfts(res.data.nfts)
-    console.log(res.data.nfts)
   }
 
   return (

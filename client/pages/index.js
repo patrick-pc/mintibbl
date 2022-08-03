@@ -21,6 +21,7 @@ import Lobby from '../components/Lobby'
 import Avatar from '../components/Avatar'
 import DrawingBoard from '../components/DrawingBoard'
 import Options from '../components/Options'
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 
 const connectionConfig = {
   forceNew: true,
@@ -48,6 +49,8 @@ const Home = () => {
     contractInterface: ABI,
     signerOrProvider: signer.data || provider,
   })
+
+  const { executeRecaptcha } = useGoogleReCaptcha()
 
   const [roomId, setRoomId] = useState('')
   const [name, setName] = useState('')
@@ -390,7 +393,6 @@ const Home = () => {
       setGuessedUsers([])
     } catch (error) {
       console.error(error)
-
       if (error.code == 4001) {
         toast.error(error.message)
       } else {
@@ -411,22 +413,44 @@ const Home = () => {
 
         return
       }
+
       setIsFreeMint(false)
       setIsMining(true)
 
+      // Using algoz to prevent bot from spamming the smart contract
+      if (!executeRecaptcha) return
+      const validationProof = await executeRecaptcha()
+
+      const config = {
+        method: 'POST',
+        url: 'https://api.algoz.xyz/validate/',
+        headers: {
+          'content-type': 'application/json',
+        },
+        data: JSON.stringify({
+          application_id: process.env.NEXT_PUBLIC_ALGOZ_APP_ID,
+          validation_proof: validationProof,
+        }),
+      }
+      const algoz = await axios(config)
+
       const tokenUri = await pinToIPFS(false)
-      const txResponse = await mintibblContract.mintDrawing(tokenUri)
+      const txResponse = await mintibblContract.mintDrawing(
+        tokenUri,
+        algoz.data.expiry_token,
+        algoz.data.auth_token,
+        algoz.data.signature_token
+      )
       const res = await txResponse.wait()
       const tokenId = res.events[0].args[1].toString()
 
-      const openSeaUrl = `https://testnets.opensea.io/assets/mumbai/0x3807Be837a65ebCf97647F6490b4337D03D76579/${tokenId}`
+      const openSeaUrl = `https://testnets.opensea.io/assets/mumbai/0x1855338dEe20b98E95E2885fA9e67BFC4D09c55E/${tokenId}`
       const polygonScanUrl = `https://mumbai.polygonscan.com/tx/${res.transactionHash}`
 
       toastMintSuccess(polygonScanUrl, openSeaUrl)
       setGuessedUsers([])
     } catch (error) {
       console.error(error)
-
       if (error.code == 4001) {
         toast.error(error.message)
       } else {
@@ -655,13 +679,13 @@ const Home = () => {
     audio.play()
   }
 
-  if (!isConnected) {
-    return (
-      <div className='flex items-center justify-center h-96 w-full'>
-        <Orbit size={40} />
-      </div>
-    )
-  }
+  // if (!isConnected) {
+  //   return (
+  //     <div className='flex items-center justify-center h-96 w-full'>
+  //       <Orbit size={40} />
+  //     </div>
+  //   )
+  // }
   return (
     <FadeIn>
       {!isGameStarted ? (
