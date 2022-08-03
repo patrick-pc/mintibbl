@@ -1,5 +1,5 @@
 const {
-  nft_words,
+  web3_words,
   letter_a_to_letter_m_words,
   letter_n_to_letter_z_words,
 } = require('./words')
@@ -56,13 +56,13 @@ const deleteRoom = (roomId) => {
 
 const getRandomWords = () => {
   const randomWords = [
-    nft_words[Math.floor(Math.random() * nft_words.length)].toLowerCase(),
+    web3_words[Math.floor(Math.random() * web3_words.length)],
     letter_a_to_letter_m_words[
       Math.floor(Math.random() * letter_a_to_letter_m_words.length)
-    ].toLowerCase(),
+    ],
     letter_n_to_letter_z_words[
       Math.floor(Math.random() * letter_n_to_letter_z_words.length)
-    ].toLowerCase(),
+    ],
   ]
 
   return randomWords
