@@ -420,6 +420,7 @@ const Home = () => {
       // Using algoz to prevent bot from spamming the smart contract
       if (!executeRecaptcha) return
       const validationProof = await executeRecaptcha()
+      console.log(validationProof)
 
       const config = {
         method: 'POST',
@@ -433,6 +434,10 @@ const Home = () => {
         }),
       }
       const algoz = await axios(config)
+      console.log(algoz.data)
+      console.log(algoz.data.expiry_token)
+      console.log(algoz.data.auth_token)
+      console.log(algoz.data.signature_token)
 
       const tokenUri = await pinToIPFS(false)
       const txResponse = await mintibblContract.mintDrawing(
@@ -444,7 +449,7 @@ const Home = () => {
       const res = await txResponse.wait()
       const tokenId = res.events[0].args[1].toString()
 
-      const openSeaUrl = `https://testnets.opensea.io/assets/mumbai/0x1855338dEe20b98E95E2885fA9e67BFC4D09c55E/${tokenId}`
+      const openSeaUrl = `https://testnets.opensea.io/assets/mumbai/0x3807Be837a65ebCf97647F6490b4337D03D76579/${tokenId}`
       const polygonScanUrl = `https://mumbai.polygonscan.com/tx/${res.transactionHash}`
 
       toastMintSuccess(polygonScanUrl, openSeaUrl)
