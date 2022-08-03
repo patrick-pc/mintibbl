@@ -449,7 +449,7 @@ const Home = () => {
       const res = await txResponse.wait()
       const tokenId = res.events[0].args[1].toString()
 
-      const openSeaUrl = `https://testnets.opensea.io/assets/mumbai/0x3807Be837a65ebCf97647F6490b4337D03D76579/${tokenId}`
+      const openSeaUrl = `https://testnets.opensea.io/assets/mumbai/0x177d026d7c0EF8E87542ae9860CcF3FB7f57DD2c/${tokenId}`
       const polygonScanUrl = `https://mumbai.polygonscan.com/tx/${res.transactionHash}`
 
       toastMintSuccess(polygonScanUrl, openSeaUrl)

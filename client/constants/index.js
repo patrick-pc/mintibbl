@@ -1,4 +1,4 @@
-export const CONTRACT_ADDRESS = '0x1855338dEe20b98E95E2885fA9e67BFC4D09c55E'
+export const CONTRACT_ADDRESS = '0x177d026d7c0EF8E87542ae9860CcF3FB7f57DD2c'
 export const ABI = [
   {
     inputs: [
@@ -216,12 +216,38 @@ export const ABI = [
   },
   {
     inputs: [],
+    name: 'getProofTtl',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
     name: 'getTokenCounter',
     outputs: [
       {
         internalType: 'uint256',
         name: '',
         type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'getVerifyEnabled',
+    outputs: [
+      {
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
       },
     ],
     stateMutability: 'view',
