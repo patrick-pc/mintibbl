@@ -57,6 +57,14 @@ contract Mintibbl is ERC721URIStorage, Ownable, Algoz {
         return s_usedTokenURIs[tokenURI] == true;
     }
 
+    function getVerifyEnabled() public view returns (bool) {
+        return s_verifyEnabled;
+    }
+
+    function getProofTtl() public view returns (uint256) {
+        return s_proofTtl;
+    }
+
     function getTokenCounter() public view returns (uint256) {
         return s_tokenCounter;
     }
