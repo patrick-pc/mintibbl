@@ -8,39 +8,39 @@ contract Algoz {
     using ECDSA for bytes32;
     using ECDSA for bytes;
 
-    mapping(bytes32 => bool) public consumedToken;
-    address public tokenVerifier;
-    bool public verifyEnabled;
-    uint256 public proofTtl;
+    mapping(bytes32 => bool) public consumed_token;
+    address public token_verifier;
+    bool public verify_enabled;
+    uint256 public proof_ttl;
 
     constructor(
-        address _tokenVerifier,
-        bool _verifyEnabled,
-        uint256 _proofTtl
+        address _token_verifier,
+        bool _verify_enabled,
+        uint256 _proof_ttl
     ) {
-        require(_proofTtl > 0, "AlgozInvalidTokenTTL");
-        tokenVerifier = _tokenVerifier;
-        verifyEnabled = _verifyEnabled; // Should be true if the contract wants to use Algoz
-        proofTtl = _proofTtl; // Ideally set this value to 3
+        require(_proof_ttl > 0, "AlgozInvalidTokenTTL");
+        token_verifier = _token_verifier;
+        verify_enabled = _verify_enabled; // should be true if the contract wants to use Algoz
+        proof_ttl = _proof_ttl; // ideally set this value to 3
     }
 
-    function validateToken(
-        bytes32 expiryToken,
-        bytes32 authToken,
-        bytes calldata signatureToken
+    function validate_token(
+        bytes32 expiry_token,
+        bytes32 auth_token,
+        bytes calldata signature_token
     ) public {
-        if (!verifyEnabled) return; // Skip verification if verifyEnabled is false
-        require(!consumedToken[authToken], "AlgozConsumedTokenError"); // Verify if the token has been used in the past
+        if (!verify_enabled) return; // skip verification if verify_enabled is false
+        require(!consumed_token[auth_token], "AlgozConsumedTokenError"); // verify if the token has been used in the past
         require(
-            SafeMath.add(uint256(expiryToken), proofTtl) >= block.number,
+            SafeMath.add(uint256(expiry_token), proof_ttl) >= block.number,
             "AlgozTokenExpiredError"
-        ); // Expire this proof if the current blocknumber > the expiry blocknumber
+        ); // expire this proof if the current blocknumber > the expiry blocknumber
         require(
-            abi.encodePacked(expiryToken, authToken).toEthSignedMessageHash().recover(
-                signatureToken
-            ) == tokenVerifier,
+            abi.encodePacked(expiry_token, auth_token).toEthSignedMessageHash().recover(
+                signature_token
+            ) == token_verifier,
             "AlgozSignatureError"
-        ); // Verify if the token has been used in the past
-        consumedToken[authToken] = true;
+        ); // verify if the token has been used in the past
+        consumed_token[auth_token] = true;
     }
 }

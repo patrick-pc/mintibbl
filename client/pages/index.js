@@ -290,11 +290,11 @@ const Home = () => {
 
       // Set metadata depending on free mint or contract mint
       if (isFreeMint) {
-        title = `Mintibbl Drawing (Test) - ${previousWord}`
+        title = `Mintibbl Drawing - ${previousWord}`
         attributes = [
           {
             trait_type: 'Collection',
-            value: 'Mintibbl - Test',
+            value: 'Mintibbl',
           },
           {
             trait_type: 'Word',
@@ -449,7 +449,7 @@ const Home = () => {
       const res = await txResponse.wait()
       const tokenId = res.events[0].args[1].toString()
 
-      const openSeaUrl = `https://testnets.opensea.io/assets/mumbai/0x177d026d7c0EF8E87542ae9860CcF3FB7f57DD2c/${tokenId}`
+      const openSeaUrl = `https://testnets.opensea.io/assets/mumbai/0xF0A9923E2CcFe44EA78EA548aC52E75E73414f1C/${tokenId}`
       const polygonScanUrl = `https://mumbai.polygonscan.com/tx/${res.transactionHash}`
 
       toastMintSuccess(polygonScanUrl, openSeaUrl)

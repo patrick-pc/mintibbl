@@ -1,4 +1,4 @@
-export const CONTRACT_ADDRESS = '0x177d026d7c0EF8E87542ae9860CcF3FB7f57DD2c'
+export const CONTRACT_ADDRESS = '0xF0A9923E2CcFe44EA78EA548aC52E75E73414f1C'
 export const ABI = [
   {
     inputs: [
@@ -20,11 +20,6 @@ export const ABI = [
     ],
     stateMutability: 'nonpayable',
     type: 'constructor',
-  },
-  {
-    inputs: [],
-    name: 'Mintibbl__TokenUriAlreadyExists',
-    type: 'error',
   },
   {
     anonymous: false,
@@ -184,7 +179,7 @@ export const ABI = [
         type: 'bytes32',
       },
     ],
-    name: 'consumedToken',
+    name: 'consumed_token',
     outputs: [
       {
         internalType: 'bool',
@@ -216,38 +211,12 @@ export const ABI = [
   },
   {
     inputs: [],
-    name: 'getProofTtl',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
     name: 'getTokenCounter',
     outputs: [
       {
         internalType: 'uint256',
         name: '',
         type: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'getVerifyEnabled',
-    outputs: [
-      {
-        internalType: 'bool',
-        name: '',
-        type: 'bool',
       },
     ],
     stateMutability: 'view',
@@ -352,7 +321,7 @@ export const ABI = [
   },
   {
     inputs: [],
-    name: 'proofTtl',
+    name: 'proof_ttl',
     outputs: [
       {
         internalType: 'uint256',
@@ -517,27 +486,8 @@ export const ABI = [
     type: 'function',
   },
   {
-    inputs: [
-      {
-        internalType: 'string',
-        name: 'tokenURI',
-        type: 'string',
-      },
-    ],
-    name: 'tokenURIExists',
-    outputs: [
-      {
-        internalType: 'bool',
-        name: '',
-        type: 'bool',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
     inputs: [],
-    name: 'tokenVerifier',
+    name: 'token_verifier',
     outputs: [
       {
         internalType: 'address',
@@ -588,28 +538,28 @@ export const ABI = [
     inputs: [
       {
         internalType: 'bytes32',
-        name: 'expiryToken',
+        name: 'expiry_token',
         type: 'bytes32',
       },
       {
         internalType: 'bytes32',
-        name: 'authToken',
+        name: 'auth_token',
         type: 'bytes32',
       },
       {
         internalType: 'bytes',
-        name: 'signatureToken',
+        name: 'signature_token',
         type: 'bytes',
       },
     ],
-    name: 'validateToken',
+    name: 'validate_token',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
   },
   {
     inputs: [],
-    name: 'verifyEnabled',
+    name: 'verify_enabled',
     outputs: [
       {
         internalType: 'bool',

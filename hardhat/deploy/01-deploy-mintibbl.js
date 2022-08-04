@@ -12,7 +12,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   log('----------------------------------------------------')
   const tokenVerifier = '0xABFdcAf85c08478a791De3B4c92d0f803E83873d'
   const verifyEnabled = true
-  const proofTtl = 10
+  const proofTtl = 200
   const args = [tokenVerifier, verifyEnabled, proofTtl]
   const mintibbl = await deploy('Mintibbl', {
     from: deployer,
