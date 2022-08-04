@@ -16,6 +16,7 @@ import { Orbit } from '@uiball/loaders'
 import { shortenAddress } from '../utils/shortenAddress'
 import { copyToClipboard } from '../utils/copyToClipboard'
 import { CONTRACT_ADDRESS, ABI } from '../constants'
+import Header from '../components/Header'
 import Join from '../components/Join'
 import Lobby from '../components/Lobby'
 import Avatar from '../components/Avatar'
@@ -133,6 +134,15 @@ const Home = () => {
     }
   }
 
+  const disconnect = () => {
+    console.log('disconnected')
+    // socket.disconnect()
+    socket.close()
+    socket.open()
+    setIsGameStarted(false)
+    setInLobby(false)
+  }
+
   // Get room id from url
   useEffect(() => {
     if (!pid) return
@@ -172,7 +182,7 @@ const Home = () => {
     })
 
     socket.on('disconnect', function () {
-      console.log('disconnected')
+      disconnect()
     })
 
     socket.on('select_word', (room) => {
@@ -420,8 +430,6 @@ const Home = () => {
       // Using algoz to prevent bot from spamming the smart contract
       if (!executeRecaptcha) return
       const validationProof = await executeRecaptcha()
-      console.log(validationProof)
-
       const config = {
         method: 'POST',
         url: 'https://api.algoz.xyz/validate/',
@@ -434,11 +442,6 @@ const Home = () => {
         }),
       }
       const algoz = await axios(config)
-      console.log(algoz.data)
-      console.log(algoz.data.expiry_token)
-      console.log(algoz.data.auth_token)
-      console.log(algoz.data.signature_token)
-
       const tokenUri = await pinToIPFS(false)
       const txResponse = await mintibblContract.mintDrawing(
         tokenUri,
@@ -693,6 +696,7 @@ const Home = () => {
   // }
   return (
     <FadeIn>
+      <Header disconnect={disconnect} />
       {!isGameStarted ? (
         inLobby && users ? (
           <Lobby

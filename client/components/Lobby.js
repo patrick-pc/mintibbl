@@ -99,7 +99,7 @@ const Lobby = ({
                         address={user.address}
                         size={50}
                       />
-                      <div className='flex flex-col items-center justify-center'>
+                      <div className='flex flex-col items-center justify-center text-center'>
                         <p className='font-medium'>{user.name}</p>
                         <span
                           className={`bg-violet-200 rounded text-gray-500 text-2xs font-mono px-1 py-0.5 ${

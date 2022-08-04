@@ -8,7 +8,6 @@ import { useState, useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3'
 import Head from 'next/head'
-import Header from '../components/Header'
 import Footer from '../components/Footer'
 
 const { chains, provider } = configureChains(
@@ -69,7 +68,6 @@ function MyApp({ Component, pageProps }) {
               />
             </Head>
             <div className='min-h-screen w-full'>
-              <Header />
               <Component {...pageProps} />
               <Footer />
             </div>
