@@ -10,7 +10,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     : VERIFICATION_BLOCK_CONFIRMATIONS
 
   log('----------------------------------------------------')
-  const tokenVerifier = '0xABFdcAf85c08478a791De3B4c92d0f803E83873d'
+  const tokenVerifier = '0x0FFEddC17Cc0EFFE38d732d30a7a1591B708fBc3'
   const verifyEnabled = true
   const proofTtl = 200
   const args = [tokenVerifier, verifyEnabled, proofTtl]
