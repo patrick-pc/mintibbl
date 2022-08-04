@@ -64,10 +64,18 @@ const DrawingBoard = ({ socket, color, canvasRef, editOption }) => {
     }
 
     const onMouseUp = (e) => {
-      const bcr = e.target.getBoundingClientRect()
       if (!drawing) return
-
       drawing = false
+
+      const bcr = e.target.getBoundingClientRect()
+      drawLine(
+        current.x,
+        current.y,
+        e.clientX - bcr.x || e.touches[0].clientX - bcr.x,
+        e.clientY - bcr.y || e.touches[0].clientY - bcr.y,
+        current.color,
+        true
+      )
     }
 
     // Limit the number of events per second
