@@ -687,13 +687,13 @@ const Home = () => {
     audio.play()
   }
 
-  // if (!isConnected) {
-  //   return (
-  //     <div className='flex items-center justify-center h-96 w-full'>
-  //       <Orbit size={40} />
-  //     </div>
-  //   )
-  // }
+  if (!isConnected) {
+    return (
+      <div className='flex items-center justify-center h-96 w-full'>
+        <Orbit size={40} />
+      </div>
+    )
+  }
   return (
     <FadeIn>
       <Header disconnect={disconnect} />
