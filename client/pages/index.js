@@ -452,8 +452,8 @@ const Home = () => {
       const res = await txResponse.wait()
       const tokenId = res.events[0].args[1].toString()
 
-      const openSeaUrl = `https://testnets.opensea.io/assets/mumbai/0xF0A9923E2CcFe44EA78EA548aC52E75E73414f1C/${tokenId}`
-      const polygonScanUrl = `https://mumbai.polygonscan.com/tx/${res.transactionHash}`
+      const openSeaUrl = `https://opensea.io/assets/matic/${CONTRACT_ADDRESS}/${tokenId}`
+      const polygonScanUrl = `https://polygonscan.com/tx/${res.transactionHash}`
 
       toastMintSuccess(polygonScanUrl, openSeaUrl)
       setGuessedUsers([])
@@ -714,6 +714,7 @@ const Home = () => {
             setName={setName}
             createRoom={createRoom}
             joinRoom={joinRoom}
+            mintibblContract={mintibblContract}
           />
         )
       ) : (

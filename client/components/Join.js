@@ -3,7 +3,14 @@ import { CONTRACT_ADDRESS } from '../constants'
 import Avatar from '../components/Avatar'
 import axios from 'axios'
 
-const Join = ({ address, name, setName, joinRoom, createRoom }) => {
+const Join = ({
+  address,
+  name,
+  setName,
+  joinRoom,
+  createRoom,
+  mintibblContract,
+}) => {
   const [nfts, setNfts] = useState([])
 
   useEffect(() => {
@@ -12,15 +19,16 @@ const Join = ({ address, name, setName, joinRoom, createRoom }) => {
 
   const fetchNfts = async () => {
     const limit = 15
-    const baseURL = `https://polygon-mumbai.g.alchemy.com/nft/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}/getNFTsForCollection/`
-    // const fetchURL = `${baseURL}?contractAddress=${CONTRACT_ADDRESS}&withMetadata=${true}&limit=${limit}`
-    const fetchURL = `${baseURL}?contractAddress=0x3807be837a65ebcf97647f6490b4337d03d76579&withMetadata=${true}&limit=${limit}`
+    const tokenCounter = await mintibblContract.getTokenCounter()
+    const startToken = parseInt(tokenCounter.toString()) - limit
+    const baseURL = `https://polygon-mainnet.g.alchemy.com/nft/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}/getNFTsForCollection/`
+    const fetchURL = `${baseURL}?contractAddress=${CONTRACT_ADDRESS}&withMetadata=${true}&limit=${limit}&startToken=${startToken}`
     const config = {
       method: 'GET',
       url: fetchURL,
     }
     const res = await axios(config)
-    setNfts(res.data.nfts)
+    setNfts(res.data.nfts.reverse())
   }
 
   return (
@@ -84,7 +92,7 @@ const Join = ({ address, name, setName, joinRoom, createRoom }) => {
           <div className='flex gap-4'>
             <a
               className='flex items-center justify-center'
-              href='https://testnets.opensea.io/collection/mintibbl'
+              href='https://opensea.io/collection/mintibbl?search[sortAscending]=false&search[sortBy]=CREATED_DATE'
               target='_blank'
             >
               <img className='h-7 w-7' src='/img/opensea.png' alt='OpenSea' />
@@ -92,7 +100,7 @@ const Join = ({ address, name, setName, joinRoom, createRoom }) => {
             </a>
             <a
               className='flex items-center justify-center'
-              href='https://opensea.io/collection/mintnft-721?search[sortAscending]=false&search[sortBy]=CREATED_DATE&search[stringTraits][0][name]=Collection&search[stringTraits][0][values][0]=Mintibbl%20-%20Test'
+              href='https://opensea.io/collection/mintnft-721?search[sortAscending]=false&search[sortBy]=CREATED_DATE&search[stringTraits][0][name]=Collection&search[stringTraits][0][values][0]=Mintibbl'
               target='_blank'
             >
               <img className='h-7 w-7' src='/img/mint.png' alt='OpenSea' />{' '}
@@ -111,7 +119,7 @@ const Join = ({ address, name, setName, joinRoom, createRoom }) => {
             >
               <a
                 className='m-item'
-                href={`https://testnets.opensea.io/assets/mumbai/0x3807be837a65ebcf97647f6490b4337d03d76579/${parseInt(
+                href={`https://opensea.io/assets/matic/${CONTRACT_ADDRESS}/${parseInt(
                   nft.id.tokenId
                 )}`}
                 target='_blank'
@@ -132,7 +140,7 @@ const Join = ({ address, name, setName, joinRoom, createRoom }) => {
                 >
                   <a
                     className='opacity-20'
-                    href={`https://testnets.opensea.io/collection/mintibbl?search[stringTraits][0][name]=Word&search[stringTraits][0][values][0]=${nft.metadata.name}`}
+                    href={`https://opensea.io/collection/mintibbl?search[sortAscending]=false&search[sortBy]=CREATED_DATE&search[stringTraits][0][name]=Word&search[stringTraits][0][values][0]=${nft.metadata.name}`}
                     target='_blank'
                   >
                     <svg

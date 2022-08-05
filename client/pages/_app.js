@@ -11,7 +11,7 @@ import Head from 'next/head'
 import Footer from '../components/Footer'
 
 const { chains, provider } = configureChains(
-  [chain.polygonMumbai, chain.polygon, chain.mainnet],
+  [chain.polygon, chain.mainnet],
   [
     alchemyProvider({ alchemyId: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY }),
     publicProvider(),
