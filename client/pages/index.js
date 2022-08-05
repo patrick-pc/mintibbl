@@ -689,9 +689,12 @@ const Home = () => {
 
   if (!isConnected) {
     return (
-      <div className='flex items-center justify-center h-96 w-full'>
-        <Orbit size={40} />
-      </div>
+      <FadeIn>
+        <Header disconnect={disconnect} />
+        <div className='flex items-center justify-center h-96 w-full'>
+          <Orbit size={40} />
+        </div>
+      </FadeIn>
     )
   }
   return (

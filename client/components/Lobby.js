@@ -11,7 +11,7 @@ const Lobby = ({
   isGameHost,
 }) => {
   return (
-    <div className='container mx-auto'>
+    <div className='container mx-auto text-center'>
       <div className='flex flex-col lg:flex-row items-center justify-center gap-8 mx-4'>
         {/* Game Settings */}
         <div className='w-full lg:w-[400px]'>
@@ -64,7 +64,7 @@ const Lobby = ({
         </div>
 
         {/* Users */}
-        <div className='w-full lg:w-[400px] h-[333px]'>
+        <div className='w-full lg:w-[400px] lg:h-[333px]'>
           <div className='flex items-center justify-center'>
             <div className='flex flex-col w-96 gap-8'>
               <div
@@ -127,7 +127,9 @@ const Lobby = ({
         </div>
       </div>
 
-      {/* <p className='text-xs opacity-50'>min. 2 players | max. 6 players</p> */}
+      <p className='text-xs opacity-50 mx-4 mt-16'>
+        min. 2 players | max. 6 players
+      </p>
     </div>
   )
 }
