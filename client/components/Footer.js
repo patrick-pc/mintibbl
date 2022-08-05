@@ -10,7 +10,7 @@ const Footer = () => {
           🐦 twitter
         </a>
         <a
-          href='https://discord.gg/w93daBSH'
+          href='https://discord.gg/YwNv4mS6JN'
           target='_blank'
           className='opacity-75 hover:opacity-100'
         >
