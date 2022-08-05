@@ -186,15 +186,18 @@ const Home = () => {
     })
 
     socket.on('select_word', (room) => {
+      let chooseWordTimer
       setIsGameStarted(true)
 
       if (room.newRound) {
+        chooseWordTimer = 13000
         setCanvasStatus('new_round')
 
         setTimeout(() => {
           setCanvasStatus('select_word')
         }, 3000)
       } else {
+        chooseWordTimer = 10000
         setCanvasStatus('select_word')
       }
 
@@ -206,10 +209,12 @@ const Home = () => {
       setWords(room.words)
       setSelectedWord('')
 
-      // setTimeout(() => {
-      //   console.log('word_is')
-      //   socket.emit('word_is', room.words[2])
-      // }, 5000)
+      if (room.drawer.id === socket.id) {
+        setTimeout(() => {
+          socket.emit('word_is', room.words[2])
+          setWords([])
+        }, chooseWordTimer)
+      }
     })
 
     socket.on('word_selected', (word) => {
@@ -687,16 +692,16 @@ const Home = () => {
     audio.play()
   }
 
-  if (!isConnected) {
-    return (
-      <FadeIn>
-        <Header disconnect={disconnect} />
-        <div className='flex items-center justify-center h-96 w-full'>
-          <Orbit size={40} />
-        </div>
-      </FadeIn>
-    )
-  }
+  // if (!isConnected) {
+  //   return (
+  //     <FadeIn>
+  //       <Header disconnect={disconnect} />
+  //       <div className='flex items-center justify-center h-96 w-full'>
+  //         <Orbit size={40} />
+  //       </div>
+  //     </FadeIn>
+  //   )
+  // }
   return (
     <FadeIn>
       <Header disconnect={disconnect} />
