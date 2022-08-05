@@ -209,12 +209,15 @@ const Home = () => {
       setWords(room.words)
       setSelectedWord('')
 
-      if (room.drawer.id === socket.id) {
-        setTimeout(() => {
-          socket.emit('word_is', room.words[2])
-          setWords([])
-        }, chooseWordTimer)
-      }
+      // if (room.drawer.id === socket.id) {
+      //   setTimeout(() => {
+      //     socket.emit(
+      //       'word_is',
+      //       room.words[Math.floor(Math.random() * room.words.length)]
+      //     )
+      //     setWords([])
+      //   }, chooseWordTimer)
+      // }
     })
 
     socket.on('word_selected', (word) => {
@@ -222,17 +225,17 @@ const Home = () => {
 
       setSelectedWord(word)
       socket.emit('clear')
-      playAudio('wordSelected.mp3')
+      // playAudio('wordSelected.mp3')
     })
 
     socket.on('timer', (timer) => {
       setDrawTime(timer)
 
-      if (timer <= 10) playAudio('tick.ogg')
+      // if (timer <= 10) playAudio('tick.ogg')
     })
 
     socket.on('guessed_correctly', () => {
-      playAudio('guessed.mp3')
+      // playAudio('guessed.mp3')
     })
 
     socket.on('end_turn', (room) => {
@@ -266,7 +269,7 @@ const Home = () => {
       setWinner(winner.name)
       setUsers(room.users)
       setCanvasStatus('game_over')
-      playAudio('winner.mp3')
+      // playAudio('winner.mp3')
 
       const timeOut = 10000
       if (room.users.length === 1) timeOut = 1000
@@ -692,16 +695,16 @@ const Home = () => {
     audio.play()
   }
 
-  // if (!isConnected) {
-  //   return (
-  //     <FadeIn>
-  //       <Header disconnect={disconnect} />
-  //       <div className='flex items-center justify-center h-96 w-full'>
-  //         <Orbit size={40} />
-  //       </div>
-  //     </FadeIn>
-  //   )
-  // }
+  if (!isConnected) {
+    return (
+      <FadeIn>
+        <Header disconnect={disconnect} />
+        <div className='flex items-center justify-center h-96 w-full'>
+          <Orbit size={40} />
+        </div>
+      </FadeIn>
+    )
+  }
   return (
     <FadeIn>
       <Header disconnect={disconnect} />
@@ -771,49 +774,63 @@ const Home = () => {
             </div>
 
             <div className='flex gap-4 mx-4 overflow-x-auto'>
-              <div className='flex flex-col w-full min-w-[300px] h-[600px] m-border gap-4 p-2'>
-                {users &&
-                  users.map((user) => {
-                    return (
-                      <div
-                        className='flex flex-row items-center border-b p-2 gap-4'
-                        key={user.id}
-                      >
-                        <Avatar
-                          name={user.name}
-                          address={user.address}
-                          size={40}
-                        />
+              <div className='flex flex-col justify-between w-full min-w-[300px] h-[600px] m-border gap-2 p-2'>
+                <div className='flex flex-col gap-4'>
+                  {users &&
+                    users.map((user) => {
+                      return (
+                        <div
+                          className='flex flex-row items-center border-b p-2 gap-4'
+                          key={user.id}
+                        >
+                          <Avatar
+                            name={user.name}
+                            address={user.address}
+                            size={40}
+                          />
 
-                        <div className='flex flex-col text-sm'>
-                          <div className='font-medium break-all'>
-                            {user.name} {user.id === socket.id && '(You)'}
+                          <div className='flex flex-col text-sm'>
+                            <div className='font-medium break-all'>
+                              {user.name} {user.id === socket.id && '(You)'}
+                            </div>
+
+                            <div>
+                              <span
+                                className={`bg-violet-200 rounded text-gray-500 text-2xs font-mono px-1 py-0.5 ${
+                                  user.address && 'cursor-pointer'
+                                }`}
+                                onClick={() => {
+                                  user.address &&
+                                    copyToClipboard(
+                                      user.address,
+                                      'Copied wallet address to clipboard!'
+                                    )
+                                }}
+                              >
+                                {user.address
+                                  ? shortenAddress(user.address)
+                                  : 'Not Connected'}
+                              </span>
+                            </div>
+
+                            <div className='text-xs'>Points: {user.points}</div>
                           </div>
-
-                          <div>
-                            <span
-                              className={`bg-violet-200 rounded text-gray-500 text-2xs font-mono px-1 py-0.5 ${
-                                user.address && 'cursor-pointer'
-                              }`}
-                              onClick={() => {
-                                user.address &&
-                                  copyToClipboard(
-                                    user.address,
-                                    'Copied wallet address to clipboard!'
-                                  )
-                              }}
-                            >
-                              {user.address
-                                ? shortenAddress(user.address)
-                                : 'Not Connected'}
-                            </span>
-                          </div>
-
-                          <div className='text-xs'>Points: {user.points}</div>
                         </div>
-                      </div>
-                    )
-                  })}
+                      )
+                    })}
+                </div>
+                <button
+                  className={`m-btn m-btn-accent m-btn-sm btn-block ${
+                    isGameHost ? 'block' : 'hidden'
+                  }`}
+                  onClick={() =>
+                    socket.emit('kick', drawer, (message) => {
+                      toast.error(message)
+                    })
+                  }
+                >
+                  Kick Drawer
+                </button>
               </div>
 
               <div

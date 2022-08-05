@@ -315,6 +315,19 @@ io.on('connection', (socket) => {
     io.to(room.id).emit('clear')
   })
 
+  socket.on('start_lobby_timer', (timer) => {
+    const room = getRoomFromSocketId(socket.id)
+    io.to(room.id).emit('lobby_timer', timer)
+  })
+
+  socket.on('kick', (drawer, callback) => {
+    if (drawer.id !== socket.id) {
+      io.sockets.sockets.get(drawer.id).disconnect(true)
+    } else {
+      callback('You cannot kick yourself!')
+    }
+  })
+
   socket.on('disconnect', () => {
     console.log(`${socket.id} disconnected.`)
     const { roomId, user } = leaveRoom(socket.id)
