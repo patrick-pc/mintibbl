@@ -11,11 +11,11 @@ const Lobby = ({
   isGameHost,
 }) => {
   return (
-    <div className='container mx-auto text-center'>
-      <div className='flex flex-col lg:flex-row items-center justify-center gap-8 mx-4'>
+    <div className='container mx-auto'>
+      <div className='flex flex-col lg:flex-row items-start justify-center gap-8 mx-4'>
         {/* Game Settings */}
         <div className='w-full lg:w-[400px]'>
-          <div className='flex items-center justify-center'>
+          <div className='flex flex-col items-center justify-center gap-8'>
             <div className='flex flex-col bg-white m-border w-96 gap-8 p-8'>
               <div>
                 <label className='label'>
@@ -60,11 +60,15 @@ const Lobby = ({
                 Start Game
               </button>
             </div>
+
+            <p className='text-xs opacity-50 p-2'>
+              min. 2 players | max. 8 players
+            </p>
           </div>
         </div>
 
         {/* Users */}
-        <div className='w-full lg:w-[400px] lg:h-[333px]'>
+        <div className='w-full lg:w-[400px]'>
           <div className='flex items-center justify-center'>
             <div className='flex flex-col w-96 gap-8'>
               <div
@@ -87,7 +91,7 @@ const Lobby = ({
                   Copy
                 </button>
               </div>
-              <div className='grid grid-cols-2 lg:grid-cols-3 gap-8'>
+              <div className='grid grid-cols-2 lg:grid-cols-3 gap-4'>
                 {users?.map((user) => {
                   return (
                     <div
@@ -126,10 +130,6 @@ const Lobby = ({
           </div>
         </div>
       </div>
-
-      <p className='text-xs opacity-50 mx-4 mt-16'>
-        min. 2 players | max. 6 players
-      </p>
     </div>
   )
 }

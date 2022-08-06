@@ -33,6 +33,7 @@ const {
   resetDrawingState,
   resetUserPoints,
 } = require('./game')
+const { MIN_PLAYERS_PER_ROOM, MAX_PLAYERS_PER_ROOM } = require('./config')
 let interval
 
 io.on('connection', (socket) => {
@@ -76,7 +77,7 @@ io.on('connection', (socket) => {
     // Check if room exists
     if (getRoom(roomId)) {
       // If room is full, create new public room
-      if (getUsers(roomId).length >= 6) {
+      if (getUsers(roomId).length >= MAX_PLAYERS_PER_ROOM) {
         roomId += 1
         publicRooms.push(roomId)
         createRoom(roomId, user)

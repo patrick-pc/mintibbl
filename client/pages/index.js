@@ -689,7 +689,7 @@ const Home = () => {
     }
   }
 
-  //  Sound FX
+  // Sound FX
   const playAudio = (fileName) => {
     const audio = new Audio('/sounds/' + fileName)
     audio.play()
@@ -775,12 +775,12 @@ const Home = () => {
 
             <div className='flex gap-4 mx-4 overflow-x-auto'>
               <div className='flex flex-col justify-between w-full min-w-[300px] h-[600px] m-border gap-2 p-2'>
-                <div className='flex flex-col gap-4'>
+                <div className='flex flex-col'>
                   {users &&
                     users.map((user) => {
                       return (
                         <div
-                          className='flex flex-row items-center border-b p-2 gap-4'
+                          className='flex flex-row items-center border-b py-1 px-2 gap-4'
                           key={user.id}
                         >
                           <Avatar
