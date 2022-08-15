@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CONTRACT_ADDRESS } from '../constants'
+import { Orbit } from '@uiball/loaders'
 import Avatar from '../components/Avatar'
 import axios from 'axios'
 
@@ -12,12 +13,14 @@ const Join = ({
   mintibblContract,
 }) => {
   const [nfts, setNfts] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     fetchNfts()
   }, [])
 
   const fetchNfts = async () => {
+    setIsLoading(true)
     const limit = 15
     const tokenCounter = await mintibblContract.getTokenCounter()
     const startToken = parseInt(tokenCounter.toString()) - limit
@@ -29,6 +32,7 @@ const Join = ({
     }
     const res = await axios(config)
     setNfts(res.data.nfts.reverse())
+    setIsLoading(false)
   }
 
   return (
@@ -111,58 +115,65 @@ const Join = ({
           </div>
         </div>
 
-        <div className='grid grid-cols-2 lg:grid-cols-5 gap-8'>
-          {nfts.map((nft, i) => (
-            <div
-              className='flex flex-col items-center justify-center gap-2 m-test'
-              key={i}
-            >
-              <a
-                className='m-item'
-                href={`https://opensea.io/assets/matic/${CONTRACT_ADDRESS}/${parseInt(
-                  nft.id.tokenId
-                )}`}
-                target='_blank'
+        {isLoading ? (
+          <div className='flex items-center justify-center w-full'>
+            <Orbit size={40} />
+          </div>
+        ) : (
+          <div className='grid grid-cols-2 lg:grid-cols-5 gap-8'>
+            {nfts.map((nft, i) => (
+              <div
+                className='flex flex-col items-center justify-center gap-2 m-test'
+                key={i}
               >
-                <img
-                  className='h-auto w-auto rounded-md'
-                  src={nft.media[0].gateway}
-                  alt={nft.title}
-                />
-              </a>
-
-              <div className='flex items-center justify-between w-full'>
-                <span className='font-medium'>{nft.title}</span>
-
-                <div
-                  className='tooltip tooltip-bottom'
-                  data-tip={`Mintibbl "${nft.metadata.name}" collection`}
+                <a
+                  className='m-item'
+                  href={`https://opensea.io/assets/matic/${CONTRACT_ADDRESS}/${parseInt(
+                    nft.id.tokenId
+                  )}`}
+                  target='_blank'
                 >
-                  <a
-                    className='opacity-20'
-                    href={`https://opensea.io/collection/mintibbl?search[sortAscending]=false&search[sortBy]=CREATED_DATE&search[stringTraits][0][name]=Word&search[stringTraits][0][values][0]=${nft.metadata.name}`}
-                    target='_blank'
+                  <img
+                    className='h-auto w-auto rounded-md'
+                    src={nft.media[0].gateway || '/img/media-not-available.png'}
+                  />
+                </a>
+
+                <div className='flex items-center justify-between w-full'>
+                  <span className='font-medium'>
+                    {nft.title ? nft.title : 'Metadata not available'}
+                  </span>
+
+                  <div
+                    className='tooltip tooltip-bottom'
+                    data-tip={`Mintibbl "${nft.metadata.name}" collection`}
                   >
-                    <svg
-                      xmlns='http://www.w3.org/2000/svg'
-                      className='h-5 w-5'
-                      fill='none'
-                      viewBox='0 0 24 24'
-                      stroke='currentColor'
-                      strokeWidth='2'
+                    <a
+                      className='opacity-20'
+                      href={`https://opensea.io/collection/mintibbl?search[sortAscending]=false&search[sortBy]=CREATED_DATE&search[stringTraits][0][name]=Word&search[stringTraits][0][values][0]=${nft.metadata.name}`}
+                      target='_blank'
                     >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        d='M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10'
-                      />
-                    </svg>
-                  </a>
+                      <svg
+                        xmlns='http://www.w3.org/2000/svg'
+                        className='h-5 w-5'
+                        fill='none'
+                        viewBox='0 0 24 24'
+                        stroke='currentColor'
+                        strokeWidth='2'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          d='M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10'
+                        />
+                      </svg>
+                    </a>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
