@@ -438,8 +438,6 @@ const Home = () => {
       // Using algoz to prevent bot from spamming the smart contract
       if (!executeRecaptcha) return
       const validationProof = await executeRecaptcha()
-      console.log('vproof')
-      console.log(validationProof)
       const config = {
         method: 'POST',
         url: 'https://api.algoz.xyz/validate/',
@@ -452,11 +450,7 @@ const Home = () => {
         }),
       }
       const algoz = await axios(config)
-      console.log('algoz')
-      console.log(algoz)
       const tokenUri = await pinToIPFS(false)
-      console.log('tokenUUri')
-      console.log(tokenUri)
       const txResponse = await mintibblContract.mintDrawing(
         tokenUri,
         algoz.data.expiry_token,
@@ -464,8 +458,6 @@ const Home = () => {
         algoz.data.signature_token
       )
       const res = await txResponse.wait()
-      console.log('res')
-      console.log(res)
       const tokenId = res.events[0].args[1].toString()
 
       const openSeaUrl = `https://opensea.io/assets/matic/${CONTRACT_ADDRESS}/${tokenId}`
