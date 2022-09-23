@@ -329,6 +329,10 @@ io.on('connection', (socket) => {
     }
   })
 
+  socket.on('leave', (socket) => {
+    io.sockets.sockets.get(socket).disconnect(true)
+  })
+
   socket.on('disconnect', () => {
     console.log(`${socket.id} disconnected.`)
     const { roomId, user } = leaveRoom(socket.id)

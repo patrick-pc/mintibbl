@@ -695,16 +695,16 @@ const Home = () => {
     audio.play()
   }
 
-  if (!isConnected) {
-    return (
-      <FadeIn>
-        <Header disconnect={disconnect} />
-        <div className='flex items-center justify-center h-96 w-full'>
-          <Orbit size={40} />
-        </div>
-      </FadeIn>
-    )
-  }
+  // if (!isConnected) {
+  //   return (
+  //     <FadeIn>
+  //       <Header disconnect={disconnect} />
+  //       <div className='flex items-center justify-center h-96 w-full'>
+  //         <Orbit size={40} />
+  //       </div>
+  //     </FadeIn>
+  //   )
+  // }
   return (
     <FadeIn>
       <Header disconnect={disconnect} />
@@ -819,18 +819,26 @@ const Home = () => {
                       )
                     })}
                 </div>
-                <button
-                  className={`m-btn m-btn-accent m-btn-sm btn-block ${
-                    isGameHost ? 'block' : 'hidden'
-                  }`}
-                  onClick={() =>
-                    socket.emit('kick', drawer, (message) => {
-                      toast.error(message)
-                    })
-                  }
-                >
-                  Kick Drawer
-                </button>
+
+                {isGameHost ? (
+                  <button
+                    className='m-btn m-btn-accent m-btn-sm'
+                    onClick={() =>
+                      socket.emit('kick', drawer, (message) => {
+                        toast.error(message)
+                      })
+                    }
+                  >
+                    Kick Drawer
+                  </button>
+                ) : (
+                  <button
+                    className='m-btn m-btn-accent m-btn-sm'
+                    onClick={() => socket.emit('leave', socket.id)}
+                  >
+                    Leave Game
+                  </button>
+                )}
               </div>
 
               <div
