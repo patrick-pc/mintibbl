@@ -23,6 +23,7 @@ import Avatar from '../components/Avatar'
 import DrawingBoard from '../components/DrawingBoard'
 import Options from '../components/Options'
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
+import { supabase } from '../utils/supabaseClient'
 
 const connectionConfig = {
   forceNew: true,
@@ -270,6 +271,7 @@ const Home = () => {
       setUsers(room.users)
       setCanvasStatus('game_over')
       // playAudio('winner.mp3')
+      if (room.drawer.id === socket.id) gamesPlayed({ winner: winner.name })
 
       const timeOut = 10000
       if (room.users.length === 1) timeOut = 1000
@@ -695,16 +697,27 @@ const Home = () => {
     audio.play()
   }
 
-  // if (!isConnected) {
-  //   return (
-  //     <FadeIn>
-  //       <Header disconnect={disconnect} />
-  //       <div className='flex items-center justify-center h-96 w-full'>
-  //         <Orbit size={40} />
-  //       </div>
-  //     </FadeIn>
-  //   )
-  // }
+  const gamesPlayed = async ({ winner }) => {
+    // Save to database
+    const { error } = await supabase.from('games').insert([
+      {
+        winner: winner,
+      },
+    ])
+
+    if (error) console.log(error.message)
+  }
+
+  if (!isConnected) {
+    return (
+      <FadeIn>
+        <Header disconnect={disconnect} />
+        <div className='flex items-center justify-center h-96 w-full'>
+          <Orbit size={40} />
+        </div>
+      </FadeIn>
+    )
+  }
   return (
     <FadeIn>
       <Header disconnect={disconnect} />
